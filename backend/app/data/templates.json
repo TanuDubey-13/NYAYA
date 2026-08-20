@@ -1,0 +1,17 @@
+{
+  "grievance": {
+    "title": "Municipal Grievance Complaint Letter",
+    "placeholders": ["name", "address", "authority", "subject", "details"],
+    "body": "To,\n[ENTER AUTHORITY]\n\nSubject: [ENTER SUBJECT]\n\nRespected Sir/Madam,\n\nI, [ENTER NAME], residing at [ENTER ADDRESS], would like to draw your immediate attention to the following civic issue: [ENTER DETAILS].\n\nPlease look into the matter and take necessary corrective action at the earliest.\n\nThanking you,\n\nYours sincerely,\n[ENTER NAME]"
+  },
+  "rti": {
+    "title": "Right to Information (RTI) Application Form A",
+    "placeholders": ["name", "address", "authority", "details", "period"],
+    "body": "To,\nPublic Information Officer,\n[ENTER AUTHORITY]\n\nSubject: Application under Section 6(1) of the Right to Information Act, 2005.\n\n1. Name of the Applicant: [ENTER NAME]\n2. Address: [ENTER ADDRESS]\n3. Particulars of Information required:\n   - Topic: [ENTER DETAILS]\n   - Target Time Period: [ENTER PERIOD]\n4. I state that the information sought does not fall within the restrictions contained in Section 8 and 9 of the RTI Act and to the best of my knowledge it pertains to your office.\n\nDate:\nPlace:\n\nSignature of Applicant:\n[ENTER NAME]"
+  },
+  "general": {
+    "title": "General Civic Application",
+    "placeholders": ["name", "address", "authority", "subject", "details"],
+    "body": "To,\n[ENTER AUTHORITY]\n\nSubject: Application regarding [ENTER SUBJECT]\n\nDear Sir/Madam,\n\nI, [ENTER NAME] (Address: [ENTER ADDRESS]), am writing this application to bring to your attention the following matter: [ENTER DETAILS].\n\nI request you to resolve this matter as soon as possible.\n\nThanking you,\n\nDate:\n\nSincerely,\n[ENTER NAME]"
+  }
+}

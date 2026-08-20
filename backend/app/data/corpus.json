@@ -1,0 +1,123 @@
+{
+  "sources": [
+    {
+      "sourceId": "SRC-001",
+      "title": "Solid Waste Management Bye-Laws, 2020",
+      "authority": "Bruhat Bengaluru Mahanagara Palike (BBMP)",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "solid_waste",
+      "tags": ["garbage", "waste", "sanitation", "solid waste", "refuse", "collection", "litter", "cleanup"],
+      "officialUrl": "https://bbmp.gov.in",
+      "content": "Section 4.1: Duties of the Municipal Corporation. The corporation is responsible for daily collection of wet waste and dry waste from all households. Household waste must be segregated. The local health inspectors and garbage collectors must ensure waste is cleared daily from public streets and bins.",
+      "lastVerified": "2026-01-15"
+    },
+    {
+      "sourceId": "SRC-002",
+      "title": "Public Lighting Infrastructure Guidelines",
+      "authority": "Urban Development Department, Karnataka",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "street_lighting",
+      "tags": ["light", "street light", "lamp", "bulb", "dark", "lighting", "electricity", "pole"],
+      "officialUrl": "https://urbandevelopment.karnataka.gov.in",
+      "content": "Section 12.3: Maintenance of Public Lamps. The municipal authority shall maintain all public streetlights in working condition. Citizens can report broken or non-functioning streetlights, and the engineering department must repair or replace the bulbs within 48 to 72 hours of the complaint log.",
+      "lastVerified": "2026-02-10"
+    },
+    {
+      "sourceId": "SRC-003",
+      "title": "Road Maintenance and Pothole Repair Protocol",
+      "authority": "Public Works Department (PWD), Karnataka",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "road_maintenance",
+      "tags": ["pothole", "road", "street", "pavement", "tarmac", "asphalt", "cracks", "tar"],
+      "officialUrl": "https://kpwd.karnataka.gov.in",
+      "content": "Section 8.5: Road Safety and Pothole Rectification. The PWD or local municipal body is responsible for fixing potholes on public roads. Major potholes posing traffic hazards must be barricaded immediately and filled with cold mix or hot mix asphalt within 7 days of identification.",
+      "lastVerified": "2026-03-01"
+    },
+    {
+      "sourceId": "SRC-004",
+      "title": "Sewerage and Drainage Regulation Code",
+      "authority": "Bangalore Water Supply and Sewerage Board (BWSSB)",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "sewerage_drainage",
+      "tags": ["sewage", "sewer", "drain", "overflow", "drainage", "manhole", "blockage", "wastewater"],
+      "officialUrl": "https://bwssb.karnataka.gov.in",
+      "content": "Section 17: Overflow and Blockage Clearance. BWSSB is mandated to maintain underground sewerage systems. Any overflow of sewage or blockage in public manholes must be cleared by sewage cleaning machinery within 24 hours of notification to prevent public health hazards.",
+      "lastVerified": "2026-03-12"
+    },
+    {
+      "sourceId": "SRC-005",
+      "title": "Water Supply Distribution Standards",
+      "authority": "Bangalore Water Supply and Sewerage Board (BWSSB)",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "water_supply",
+      "tags": ["water", "supply", "tap", "leakage", "drinking", "contamination", "pipeline", "pressure"],
+      "officialUrl": "https://bwssb.karnataka.gov.in",
+      "content": "Section 9: Safe Drinking Water Distribution. BWSSB is responsible for supplying potable drinking water to municipal wards. Water line leakages or contaminated water complaints must be inspected by ward water engineers and repaired to restore clean supply within 48 hours.",
+      "lastVerified": "2026-02-25"
+    },
+    {
+      "sourceId": "SRC-006",
+      "title": "Environmental Protection Bye-Laws on Waste Dumping",
+      "authority": "Karnataka State Pollution Control Board (KSPCB)",
+      "jurisdiction": {
+        "country": "India",
+        "state": "Karnataka",
+        "city": "Bengaluru",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "illegal_dumping",
+      "tags": ["dump", "dumping", "illegal", "debris", "plastic", "construction", "commercial waste"],
+      "officialUrl": "https://kspcb.karnataka.gov.in",
+      "content": "Section 22: Prohibition of Dumping in Public Areas. Dumping of construction debris, plastic waste, or commercial garbage in vacant sites, water bodies, or roadsides is strictly prohibited. Offenders are liable for spot fines, and the local authority must clear illegal dumps.",
+      "lastVerified": "2026-01-20"
+    },
+    {
+      "sourceId": "SRC-007",
+      "title": "Right to Information Rules, 2005",
+      "authority": "Ministry of Personnel, Public Grievances and Pensions",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "rti",
+      "subcategory": "rti_request",
+      "tags": ["rti", "information", "details", "record", "file", "document", "government", "officer"],
+      "officialUrl": "https://rti.gov.in",
+      "content": "Section 6(1): Request for obtaining information. Any citizen of India can file an RTI application seeking details or inspection of government records. The Public Information Officer must provide the information within 30 days of receiving the request.",
+      "lastVerified": "2025-12-01"
+    }
+  ]
+}
