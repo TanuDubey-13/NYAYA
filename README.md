@@ -2,72 +2,82 @@
 
 > **An AI-powered civic navigator that transforms a citizen's problem into a jurisdiction-aware, evidence-verified action plan and ready-to-submit grievance.**
 
-**Hackathon Submission:** AI for Civic & Legal Empowerment
+NYAYA helps citizens navigate municipal and civic processes without requiring them to understand complex administrative procedures or legal terminology.
+
+Instead of functioning as a generic AI chatbot, NYAYA combines **structured AI triage, evidence-based retrieval, deterministic verification, jurisdiction mapping, dynamic action planning, and grievance drafting** into a single workflow.
 
 ---
 
 ## 🎯 The Problem
 
-Citizens frequently struggle with everyday civic problems:
+Citizens frequently encounter everyday civic problems such as:
 
 * Garbage collection delays
 * Broken streetlights
 * Potholes and damaged roads
 * Water and sanitation issues
 * Illegal dumping
-* Municipal service failures
+* Public infrastructure problems
+* Unresolved municipal complaints
 
-The challenge isn't simply knowing **what the problem is**. Citizens often don't know:
+The difficulty is often not identifying the problem itself, but understanding:
 
 * Which authority is responsible?
-* What rules or procedures apply?
-* What evidence should they collect?
-* Where should they submit the complaint?
-* What should they do if the complaint is ignored?
+* Which department should handle it?
+* What evidence should be collected?
+* What procedure should be followed?
+* What action should be taken if the complaint is ignored?
 * Which information provided by an AI system can actually be trusted?
 
-Traditional AI chatbots can generate convincing answers but may hallucinate authorities, regulations, deadlines, or legal claims.
+Traditional AI assistants can generate fluent answers, but they may produce **generic advice, incorrect authorities, unsupported legal claims, or fabricated references**.
 
-### 💡 NYAYA's Approach
+NYAYA is designed around a different principle:
 
-**NYAYA doesn't treat an AI-generated statement as a fact.**
-
-It separates:
-
-> **AI-powered understanding** from **deterministic verification.**
-
-The AI understands the citizen's problem.
-The verification engine determines what can actually be presented as verified.
+> **AI should understand the citizen's problem, but factual verification should be handled by deterministic systems and structured evidence.**
 
 ---
 
-# 🚀 What Makes NYAYA Different?
+# 🚀 What NYAYA Does
 
-| Traditional AI Chatbot          | NYAYA                                               |
-| ------------------------------- | --------------------------------------------------- |
-| Generic conversational response | Structured civic case                               |
-| May hallucinate rules           | Claims require evidence                             |
-| Generic advice                  | Jurisdiction-specific actions                       |
-| User finds authority themselves | Authority mapped from verified data                 |
-| One-shot answer                 | Problem → Verification → Action → Draft → Tracking  |
-| AI output treated as answer     | AI output separated from verification               |
-| Generic document generation     | Context-aware grievance drafting                    |
-| No clear confidence state       | 🟢 Verified / 🟡 Needs Verification / 🔴 Unverified |
-| Primarily chat-focused          | Case-management focused                             |
+NYAYA converts an unstructured citizen complaint into a structured civic case.
 
-### 🧠 Core Principle
+```text
+Citizen Problem
+      ↓
+AI Triage
+      ↓
+Jurisdiction Detection
+      ↓
+Knowledge Retrieval
+      ↓
+Evidence Verification
+      ↓
+Action Plan
+      ↓
+Grievance Draft
+      ↓
+Case Timeline
+      ↓
+Persistent Dashboard
+```
 
-> **AI understands the citizen. Deterministic systems decide what can be trusted.**
+The goal is to move the citizen from:
+
+> **"I have a problem. What should I do?"**
+
+to:
+
+> **"I know who is responsible, what evidence supports the information, what action I can take, and what I should do next."**
 
 ---
 
-# ⭐ Key Innovations
+# ⭐ Core Features
 
 ## 1. 🔎 Evidence-First Verification
 
-NYAYA does **not** allow Gemini to independently decide whether a legal or administrative claim is valid.
+NYAYA does not allow the AI model to independently decide whether a legal or administrative claim is valid.
 
-Instead:
+Instead, claims are evaluated against a structured knowledge corpus.
 
 ```text
 Claim
@@ -76,32 +86,46 @@ Normalize
   ↓
 Knowledge Corpus Lookup
   ↓
-Authority / Rule Matching
-  ↓
-Evidence Found?
+Rule / Authority Matching
   ↓
 Verification Engine
   ↓
-🟢 Verified
-🟡 Needs Verification
-🔴 Unverified
+Verification Status
 ```
 
-A claim becomes **Verified only when it matches the structured knowledge corpus and satisfies the verification rules.**
+The system produces three states:
 
-This reduces the risk of fabricated authorities, regulations, and unsupported legal claims.
+### 🟢 Verified
+
+The claim matches supported evidence in the knowledge corpus.
+
+### 🟡 Needs Verification
+
+Additional context or evidence is required before the claim can be confidently used.
+
+### 🔴 Unverified
+
+No reliable supporting evidence was found.
+
+This creates an important distinction between:
+
+> **What the AI generated**
+
+and
+
+> **What the system can actually verify.**
 
 ---
 
-## 2. 🤖 Structured Gemini Triage
+# 2. 🤖 Structured Gemini Triage
 
-Citizens describe problems naturally.
+Citizens can describe their problems naturally.
 
 For example:
 
-> "Garbage hasn't been collected from our street for five days."
+> "The garbage hasn't been collected from our street for five days."
 
-Gemini 2.5 Flash converts the description into structured data using strict schemas:
+Gemini 2.5 Flash converts the description into structured information using schema-constrained output.
 
 ```json
 {
@@ -113,23 +137,25 @@ Gemini 2.5 Flash converts the description into structured data using strict sche
 }
 ```
 
-Gemini is used for:
+The AI is responsible for:
 
-* Classification
+* Problem classification
 * Information extraction
-* Location markers
-* Urgency assessment
-* Clarification detection
+* Subcategory identification
+* Urgency estimation
+* Location extraction
+* Detecting missing information
+* Generating clarification requests
 
-It is **not trusted as the final source of legal truth.**
+The AI is **not treated as the final authority for factual or legal verification**.
 
 ---
 
-## 3. 🏛️ Jurisdiction-Aware Guidance
+# 3. 🏛️ Jurisdiction-Aware Guidance
 
-A civic solution is only useful if it identifies the correct authority.
+Civic procedures vary by location.
 
-NYAYA checks:
+NYAYA therefore treats jurisdiction as a first-class part of the case.
 
 ```text
 Problem
@@ -145,25 +171,25 @@ Responsible Authority
 Applicable Evidence
 ```
 
-If required jurisdiction information is missing:
+If required location or jurisdiction information is missing:
 
 ```text
-Citizen Input
-      ↓
-Jurisdiction Incomplete
-      ↓
-❓ Clarification Request
-      ↓
-Continue only after sufficient context
+Incomplete Jurisdiction
+        ↓
+Clarification Request
+        ↓
+Additional Context
+        ↓
+Continue Verification
 ```
 
-NYAYA avoids guessing when the location or authority cannot be reliably determined.
+NYAYA avoids confidently guessing the responsible authority when sufficient information is unavailable.
 
 ---
 
-## 4. 📋 Dynamic Action Plans
+# 4. 📋 Dynamic Action Plans
 
-Instead of returning a wall of text, NYAYA converts verified information into actionable steps.
+Instead of returning a long block of generic advice, NYAYA generates structured actions.
 
 Example:
 
@@ -171,56 +197,60 @@ Example:
 CASE: Missed Garbage Collection
 
 ☑ Collect photographs/videos
-☑ Record affected location
-☑ Submit municipal complaint
+☑ Record the affected location
+☑ Document the dates of missed collection
+☑ Submit a municipal complaint
 ☑ Attach supporting evidence
-☑ Record complaint/reference number
-☑ Track resolution
-☑ Escalate if the issue remains unresolved
+☑ Save the complaint/reference number
+☑ Track the complaint
+☑ Follow the appropriate escalation path if unresolved
 ```
 
-Each action can contain:
+Each action can be associated with:
 
-* Why the action matters
 * Responsible authority
-* Required evidence
-* Supporting source
+* Supporting evidence
+* Reason for the action
+* Required documentation
 * Verification status
 
 ---
 
-## 5. 📄 Dynamic Grievance Drafting
+# 5. 📄 Dynamic Grievance Drafting
 
-NYAYA generates context-aware complaint drafts using:
+NYAYA generates context-aware grievance documents based on the citizen's case.
 
-* Citizen's problem
+The draft can incorporate:
+
+* Citizen-provided information
+* Problem classification
 * Location
 * Responsible authority
 * Verified facts
-* Evidence collected
-* Relevant complaint format
+* Supporting evidence
+* Appropriate grievance structure
 
-The system helps citizens produce a structured grievance without presenting unsupported legal claims as facts.
+The system is designed to avoid inserting unsupported legal claims simply because they sound convincing.
 
 ---
 
-## 6. 👤 Guest-to-User Account Mapping
+# 6. 👤 Guest-to-User Account Mapping
 
-Citizens don't need to create an account before exploring the system.
+Citizens can begin using NYAYA without creating an account.
 
-### Guest Mode
+### Guest Experience
 
 ```text
 Describe Problem
       ↓
-Explore Rights
+Explore Guidance
       ↓
 Build Action Plan
       ↓
 Generate Draft
 ```
 
-When the citizen chooses to save the case:
+When the citizen chooses to save their work:
 
 ```text
 Guest Session
@@ -229,103 +259,73 @@ Firebase Authentication
       ↓
 User Account
       ↓
-Existing Case Data Migrated
+Existing Case Data
       ↓
 Persistent Dashboard
 ```
 
-This removes unnecessary onboarding friction while preserving user-created work.
+This allows users to explore the system without unnecessary onboarding while preserving their work when they create an account.
 
 ---
 
-# 🧪 Verification States
+# 7. 📅 Case Timeline
 
-NYAYA makes information reliability visible to the citizen.
-
-### 🟢 VERIFIED
-
-The claim matches supported evidence in the knowledge corpus.
-
-### 🟡 NEEDS VERIFICATION
-
-The available information is insufficient or additional context is required.
-
-### 🔴 UNVERIFIED
-
-No reliable supporting evidence was found.
-
-> **NYAYA does not automatically convert an unsupported AI-generated claim into a legal or administrative fact.**
-
----
-
-# 🧑‍💻 Example User Journey
-
-### Citizen Problem
-
-> "There is a large pothole outside my house and it is becoming dangerous for vehicles."
-
-### Step 1 — AI Triage
-
-```text
-Category: Roads & Infrastructure
-Issue: Pothole
-Urgency: High
-Location: Kanpur
-```
-
-### Step 2 — Jurisdiction Check
-
-```text
-Location
-   ↓
-Municipal Jurisdiction
-   ↓
-Responsible Department
-```
-
-### Step 3 — Evidence Search
-
-NYAYA searches its structured civic knowledge corpus.
-
-### Step 4 — Deterministic Verification
-
-```text
-Authority Match: ✓
-Service Match: ✓
-Supporting Evidence: ✓
-
-Status: 🟢 VERIFIED
-```
-
-### Step 5 — Action Plan
-
-```text
-1. Capture photographs
-2. Record exact location
-3. Submit complaint
-4. Attach evidence
-5. Save complaint/reference number
-6. Track resolution
-7. Escalate when applicable
-```
-
-### Step 6 — Grievance Draft
-
-NYAYA generates a structured complaint addressed to the appropriate authority.
-
-### Step 7 — Case Timeline
+NYAYA represents a civic complaint as an evolving case rather than a one-time AI conversation.
 
 ```text
 Problem Identified
-       ↓
-Draft Created
-       ↓
+        ↓
+Information Collected
+        ↓
+Action Plan Created
+        ↓
+Grievance Drafted
+        ↓
 Complaint Submitted
-       ↓
+        ↓
 Under Review
-       ↓
-Resolved
+        ↓
+Resolved / Escalated
 ```
+
+This gives citizens a structured view of what has happened and what remains to be done.
+
+---
+
+# 🧠 AI + Deterministic Architecture
+
+One of NYAYA's most important design decisions is separating **AI interpretation** from **factual verification**.
+
+```text
+                    NYAYA
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+       AI Layer             Deterministic Layer
+          │                       │
+    Gemini 2.5 Flash        Knowledge Corpus
+          │                       │
+    Classification          Rule Matching
+    Entity Extraction       Authority Mapping
+    Urgency Detection       Evidence Validation
+    Clarification           Verification
+          │                       │
+          └───────────┬───────────┘
+                      ↓
+               Verified Result
+                      ↓
+                Action Plan
+                      ↓
+               Grievance Draft
+                      ↓
+                 Case Timeline
+```
+
+### Design Principle
+
+> **AI understands. Evidence verifies. The application orchestrates action.**
+
+This architecture helps reduce hallucination risks while still benefiting from the flexibility of generative AI.
 
 ---
 
@@ -361,72 +361,113 @@ graph TD
 
 ---
 
-# 🧠 AI vs Deterministic Layer
+# 🧑‍💻 Example User Journey
 
-One of NYAYA's core architectural decisions is separating AI reasoning from factual verification.
+### Citizen Input
+
+> "There is a large pothole outside my house and vehicles are struggling to pass safely."
+
+### AI Triage
 
 ```text
-                    NYAYA
-                      │
-          ┌───────────┴───────────┐
-          │                       │
-       AI Layer             Deterministic Layer
-          │                       │
-    Gemini 2.5 Flash        Knowledge Corpus
-          │                       │
-    Classification          Rule Matching
-    Entity Extraction        Authority Mapping
-    Urgency Detection        Evidence Validation
-    Clarification            Verification Status
-          │                       │
-          └───────────┬───────────┘
-                      ↓
-               Verified Result
-                      ↓
-                Action Plan
-                      ↓
-               Grievance Draft
+Category: Roads & Infrastructure
+Issue: Pothole
+Urgency: High
+Location: Kanpur
 ```
+
+### Jurisdiction Check
+
+```text
+Location
+   ↓
+Municipal Jurisdiction
+   ↓
+Responsible Department
+```
+
+### Evidence Retrieval
+
+NYAYA searches its structured civic knowledge corpus.
+
+### Verification
+
+```text
+Authority Match: ✓
+Service Match: ✓
+Supporting Evidence: ✓
+
+Status: 🟢 VERIFIED
+```
+
+### Action Plan
+
+```text
+1. Capture photographs
+2. Record the exact location
+3. Submit the complaint
+4. Attach supporting evidence
+5. Save the complaint/reference number
+6. Track resolution
+7. Follow the applicable escalation process
+```
+
+### Grievance
+
+NYAYA generates a structured complaint using the verified case information.
+
+### Timeline
+
+The case can then be tracked through its lifecycle.
+
+---
+
+# 🖥️ Product Screenshots
+
+Add screenshots of the actual application here.
+
+### Problem Input
+
+![NYAYA Problem Input](docs/screenshots/problem-input.png)
+
+### AI Triage
+
+![NYAYA AI Triage](docs/screenshots/triage.png)
+
+### Evidence Verification
+
+![NYAYA Verification](docs/screenshots/verification.png)
+
+### Action Plan
+
+![NYAYA Action Plan](docs/screenshots/action-plan.png)
+
+### Grievance Editor
+
+![NYAYA Grievance Editor](docs/screenshots/grievance.png)
+
+### Case Timeline
+
+![NYAYA Timeline](docs/screenshots/timeline.png)
+
+> Replace the paths above with the actual screenshot locations in the repository.
 
 ---
 
 # 🛠️ Technology Stack
 
-### Frontend
-
-* React
-* TypeScript
-* Vite
-* Modern component-based UI
-
-### Backend
-
-* Python
-* FastAPI
-* Pydantic
-* REST APIs
-
-### AI
-
-* Google Gemini 2.5 Flash
-* Structured JSON / schema-constrained triage
-
-### Knowledge & Retrieval
-
-* Structured civic knowledge corpus
-* RAG / retrieval layer
-* Deterministic verification engine
-
-### Authentication & Persistence
-
-* Firebase Authentication
-* Cloud Firestore
-
-### Testing
-
-* Python regression tests
-* Gemini triage tests
-* Authentication & Firestore integration tests
+| Layer             | Technology                            |
+| ----------------- | ------------------------------------- |
+| Frontend          | React, TypeScript, Vite               |
+| Backend           | Python, FastAPI                       |
+| Validation        | Pydantic                              |
+| AI                | Google Gemini 2.5 Flash               |
+| Retrieval         | Structured Knowledge Corpus / RAG     |
+| Verification      | Deterministic Verification Engine     |
+| Authentication    | Firebase Authentication               |
+| Database          | Cloud Firestore                       |
+| API Communication | REST                                  |
+| Testing           | Python Regression & Integration Tests |
 
 ---
 
@@ -459,114 +500,27 @@ NYAYA/
 │   ├── test_gemini_triage.py
 │   └── test_phase4_auth_firestore.py
 │
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── RightsPanel/
-    │   │   ├── CaseDashboard/
-    │   │   ├── Editor/
-    │   │   └── Timeline/
-    │   │
-    │   ├── utils/
-    │   │   ├── api.ts
-    │   │   └── firebase.ts
-    │   │
-    │   └── App.tsx
-    │
-    └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RightsPanel/
+│   │   │   ├── CaseDashboard/
+│   │   │   ├── Editor/
+│   │   │   └── Timeline/
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── api.ts
+│   │   │   └── firebase.ts
+│   │   │
+│   │   └── App.tsx
+│   │
+│   └── package.json
+│
+├── docs/
+│   └── screenshots/
+│
+└── README.md
 ```
-
----
-
-# 🖥️ Product Preview
-
-> Add actual screenshots here before submitting the hackathon project.
-
-### 1. Problem Input
-
-```text
-docs/screenshots/problem-input.png
-```
-
-### 2. AI Triage
-
-```text
-docs/screenshots/triage.png
-```
-
-### 3. Evidence Verification
-
-```text
-docs/screenshots/verification.png
-```
-
-### 4. Action Plan
-
-```text
-docs/screenshots/action-plan.png
-```
-
-### 5. Generated Grievance
-
-```text
-docs/screenshots/grievance.png
-```
-
-### 6. Case Timeline
-
-```text
-docs/screenshots/timeline.png
-```
-
----
-
-# 🛡️ Safety & Reliability
-
-NYAYA is designed specifically for civic and legal-adjacent use cases where incorrect information can cause real-world harm.
-
-### Reliability Principles
-
-* AI-generated content is not automatically considered verified.
-* Claims require supporting evidence before receiving a **Verified** status.
-* Missing jurisdiction information triggers clarification instead of guessing.
-* Unsupported authorities are not fabricated.
-* Unsupported laws, deadlines, and regulations are not presented as facts.
-* Verification status is visible to the user.
-* NYAYA does not replace a lawyer or qualified legal professional.
-* Knowledge coverage is limited to supported jurisdictions and sources.
-
-### Coverage Principle
-
-> **If NYAYA cannot verify something, it should say so rather than confidently invent an answer.**
-
----
-
-# 🧪 Testing & Reliability
-
-NYAYA includes dedicated tests for critical components.
-
-### Current Test Areas
-
-```text
-✓ RAG retrieval
-✓ Knowledge corpus lookup
-✓ Verification logic
-✓ Gemini structured output
-✓ Jurisdiction handling
-✓ Authentication
-✓ Firestore persistence
-✓ Guest → authenticated case migration
-```
-
-Run:
-
-```bash
-python test_phase1.py
-python test_gemini_triage.py
-python test_phase4_auth_firestore.py
-```
-
-> Add the actual test count here once verified, for example: **"XX tests passing."**
 
 ---
 
@@ -615,23 +569,29 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ### ⚠️ Security
 
-Never commit:
+Never commit credentials or secrets to Git.
 
-```text
+Recommended `.gitignore` entries:
+
+```gitignore
 .env
 .env.*
-Firebase service-account JSON files
-API keys
-Private keys
+!.env.example
+
+backend/venv/
+__pycache__/
+*.pyc
+
+firebase-service-account*.json
 ```
 
-Use `.gitignore` and provide only `.env.example` files in the repository.
+Only commit `.env.example` files containing placeholder values.
 
 ---
 
-# 🏃 Quick Start
+# 🏃 Installation & Setup
 
-## 1. Backend
+## Backend
 
 ```bash
 cd backend
@@ -642,17 +602,25 @@ python -m venv venv
 venv\Scripts\activate
 
 pip install -r requirements.txt
+```
 
+Run tests:
+
+```bash
 python test_phase1.py
 python test_gemini_triage.py
 python test_phase4_auth_firestore.py
+```
 
+Start the API:
+
+```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
 ---
 
-## 2. Frontend
+## Frontend
 
 Open another terminal:
 
@@ -672,161 +640,202 @@ http://localhost:5173
 
 ---
 
-# 🎮 Demo
+# 🧪 Testing & Reliability
 
-**Live Demo:** `ADD_YOUR_DEPLOYED_URL`
+NYAYA includes tests for critical application components.
 
-**Repository:** `ADD_YOUR_GITHUB_URL`
-
-**Demo Video:** `ADD_YOUR_VIDEO_URL`
-
-### Recommended Demo Flow
-
-For the hackathon demo, demonstrate:
+### Current Test Areas
 
 ```text
-1. Enter a real civic problem
-          ↓
-2. Gemini extracts structured information
-          ↓
-3. Jurisdiction is identified
-          ↓
-4. Evidence is retrieved
-          ↓
-5. Verification badge appears
-          ↓
-6. Action plan is generated
-          ↓
-7. Grievance is drafted
-          ↓
-8. Case timeline is created
-          ↓
-9. User saves the case
+✓ RAG retrieval
+✓ Knowledge corpus lookup
+✓ Verification logic
+✓ Gemini structured output
+✓ Jurisdiction handling
+✓ Authentication
+✓ Firestore persistence
+✓ Guest → authenticated case migration
 ```
+
+The test suite is designed to help prevent regressions in the parts of the system responsible for **retrieval, verification, AI structured output, and user data persistence**.
+
+> Add the exact number of passing tests here once the complete test suite has been executed.
+
+---
+
+# 🛡️ Safety & Reliability
+
+NYAYA operates in a civic and legal-adjacent domain where incorrect information can have real-world consequences.
+
+### Reliability Principles
+
+* AI-generated content is not automatically considered verified.
+* Claims require supporting evidence before receiving a **Verified** status.
+* Missing jurisdiction information triggers clarification instead of guessing.
+* Unsupported authorities are not fabricated.
+* Unsupported laws, deadlines, or regulations are not presented as established facts.
+* Verification status is visible to the user.
+* The system distinguishes retrieved evidence from generated content.
+* NYAYA does not replace a lawyer or qualified legal professional.
+* Knowledge coverage depends on the jurisdictions and sources available in the system.
+
+### Core Safety Principle
+
+> **When NYAYA cannot verify something, it should communicate uncertainty rather than confidently invent an answer.**
 
 ---
 
 # 🌍 Jurisdiction Coverage
 
-NYAYA is designed to be extensible across cities and municipal departments.
+NYAYA is designed to support multiple cities, departments, and civic services.
 
-Current verified coverage should be explicitly listed here:
+Coverage should always be explicitly tied to the available knowledge corpus.
 
-```text
 Example:
 
-✓ Kanpur
-  ├── Waste Management
-  ├── Roads / Potholes
-  └── Street Lighting
+```text
+Kanpur
+├── Waste Management
+├── Roads / Potholes
+└── Street Lighting
 
-✓ Bengaluru
-  ├── [Supported Department]
-  └── [Supported Department]
+Bengaluru
+├── Supported Department
+└── Supported Department
 ```
 
-> **NYAYA does not assume that a rule or authority applies outside the jurisdictions represented in its verified knowledge corpus.**
+> NYAYA does not assume that a rule, authority, or procedure applies outside a supported jurisdiction.
+
+As the knowledge corpus grows, additional cities and departments can be added without changing the fundamental application architecture.
 
 ---
 
-# 🚀 Future Roadmap
+# 📈 Scalability
 
-### Phase 1 — Current
+The architecture is designed to expand beyond a single municipality.
 
-* AI civic triage
-* Jurisdiction detection
-* Evidence-backed verification
-* Dynamic action plans
-* Grievance drafting
-* Firebase authentication
-* Case persistence
-* Timeline tracking
+### Current Architecture
 
-### Phase 2
+```text
+Citizen
+   ↓
+Triage
+   ↓
+Jurisdiction
+   ↓
+Knowledge Corpus
+   ↓
+Verification
+   ↓
+Action
+```
 
-* Expand municipal knowledge corpus
-* Multi-city support
-* More civic departments
-* Official government API integrations
-* Complaint status synchronization
+### Scaled Architecture
 
-### Phase 3
+```text
+                    NYAYA
+                      │
+       ┌──────────────┼──────────────┐
+       ↓              ↓              ↓
+    Kanpur         Bengaluru       Other Cities
+       │              │              │
+   Knowledge      Knowledge       Knowledge
+    Corpus         Corpus          Corpus
+       │              │              │
+       └──────────────┼──────────────┘
+                      ↓
+             Shared Verification
+                  Framework
+```
 
-* Multilingual Indian-language support
-* Voice-based civic assistance
-* WhatsApp/SMS workflows
-* Accessibility-first interfaces
-* Automated escalation tracking
-
----
-
-# 💡 Long-Term Vision
-
-NYAYA aims to become a **trusted civic action layer** between citizens and public institutions.
-
-Instead of asking:
-
-> "What does the AI think I should do?"
-
-Citizens should be able to ask:
-
-> **"What can I do, which authority is responsible, what evidence supports this, and what should I do next?"**
-
-NYAYA turns that question into a structured, evidence-aware workflow.
+This allows new jurisdictions to be added primarily through **knowledge and configuration**, rather than rebuilding the complete application.
 
 ---
 
-# 🏆 Hackathon Pitch
+# 🚀 Roadmap
 
-### The Problem
+## Phase 1 — Core Platform
 
-Citizens know their problem but often don't know the correct bureaucratic path.
+* [x] AI civic triage
+* [x] Structured output
+* [x] Jurisdiction detection
+* [x] Evidence retrieval
+* [x] Deterministic verification
+* [x] Action-plan generation
+* [x] Grievance drafting
+* [x] Firebase authentication
+* [x] Firestore persistence
+* [x] Case timeline
 
-### The Solution
+## Phase 2 — Expansion
 
-**NYAYA converts a natural-language civic complaint into a verified, jurisdiction-aware action plan.**
+* [ ] Expand municipal knowledge corpus
+* [ ] Multi-city support
+* [ ] More civic departments
+* [ ] Additional official sources
+* [ ] Complaint status synchronization
+* [ ] Improved evidence management
 
-### The Innovation
+## Phase 3 — Accessibility
 
-**AI performs understanding. Deterministic systems perform verification.**
+* [ ] Hindi and additional Indian-language support
+* [ ] Voice-based interaction
+* [ ] Accessibility-first interface
+* [ ] Mobile-first experience
+* [ ] WhatsApp/SMS workflows
 
-### The Impact
+## Phase 4 — Civic Infrastructure
 
-Citizens receive:
-
-**Problem → Authority → Evidence → Action → Grievance → Timeline**
-
-instead of another generic chatbot response.
-
----
-
-# 📌 Why NYAYA Matters
-
-> **NYAYA doesn't just tell citizens what an AI thinks.**
->
-> **It helps them understand what can be verified, who is responsible, what action they can take, and how to move the case forward.**
-
----
-
-## 👥 Team
-
-**Team Name:** `ADD_TEAM_NAME`
-
-**Team Members:**
-
-* `Member 1`
-* `Member 2`
-* `Member 3`
-* `Member 4`
+* [ ] Government API integrations
+* [ ] Automated complaint tracking
+* [ ] Escalation monitoring
+* [ ] Analytics for recurring civic problems
+* [ ] Aggregated infrastructure issue insights
 
 ---
 
-## 📄 License
+# 🔭 Long-Term Vision
 
-Add your project license here.
+NYAYA aims to become a **trusted civic action layer** connecting citizens with public institutions.
+
+The long-term goal is not simply to build another AI assistant.
+
+It is to create a system where citizens can move from:
+
+```text
+"I have a civic problem."
+```
+
+to:
+
+```text
+"I know the responsible authority."
+        ↓
+"I know what evidence supports my case."
+        ↓
+"I know what action I can take."
+        ↓
+"I have a ready-to-submit grievance."
+        ↓
+"I can track what happens next."
+```
 
 ---
 
-**Built for AI-powered civic and legal empowerment.**
+# 👤 About the Project
 
-**NYAYA — From Citizen Problem to Verified Action.**
+**NYAYA** is an independent software project exploring how generative AI, retrieval systems, deterministic verification, and civic information can be combined to create more trustworthy citizen-facing applications.
+
+The project focuses on one central question:
+
+> **How can AI make civic processes easier without making factual reliability worse?**
+
+NYAYA's architecture approaches this by keeping **AI interpretation** and **evidence verification** as separate responsibilities.
+
+---
+
+
+
+## NYAYA
+
+### **From Citizen Problem to Verified Action.**
