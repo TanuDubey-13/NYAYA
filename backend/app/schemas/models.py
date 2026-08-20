@@ -102,6 +102,14 @@ class DraftDocument(BaseModel):
             raise ValueError(f"docType must be one of {valid}")
         return v.lower()
 
+class AuditLogEntry(BaseModel):
+    event: str
+    fromStatus: Optional[str] = None
+    toStatus: Optional[str] = None
+    actor: str = "guest"  # "guest" | "user" | "system"
+    actorId: Optional[str] = None
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
 class CaseDocument(BaseModel):
     caseId: str
     userId: Optional[str] = None
@@ -118,6 +126,7 @@ class CaseDocument(BaseModel):
     evidence: List[EvidenceItem] = []
     actionPlan: List[ActionStep] = []
     draftDocument: Optional[DraftDocument] = None
+    auditLog: List[AuditLogEntry] = []
     createdAt: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 

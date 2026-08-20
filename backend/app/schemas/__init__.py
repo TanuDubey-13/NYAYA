@@ -10,5 +10,6 @@ from .models import (
     ActionPlan,
     DraftDocument,
     CaseDocument,
-    KnowledgeSource
+    KnowledgeSource,
+    AuditLogEntry
 )

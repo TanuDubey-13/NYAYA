@@ -1,4 +1,4 @@
-// Simple Typed API Client for NYAYA Backend
+// Centralized Typed API Client for NYAYA Backend
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -21,8 +21,8 @@ export interface CaseDocument {
     state: string;
     city: string;
     localityOrWard: string;
-    department?: string;
-    authority?: string;
+    department?: string | null;
+    authority?: string | null;
   };
   conversationHistory: Array<{ role: string; content: string; timestamp: string }>;
   claims: Array<{ claim: string; sourceIds: string[]; verificationStatus: string }>;
@@ -32,7 +32,7 @@ export interface CaseDocument {
     authority: string;
     excerpt: string;
     officialUrl: string;
-    jurisdiction: { country: string; state: string; city: string };
+    jurisdiction: { country: string; state: string; city: string; localityOrWard?: string };
   }>;
   actionPlan: Array<{
     stepNumber: number;
@@ -51,53 +51,108 @@ export interface CaseDocument {
   } | null;
 }
 
-export async function checkBackendHealth(): Promise<HealthResponse> {
-  try {
-    const response = await fetch(`${API_BASE}/health`);
-    if (!response.ok) {
-      throw new Error(`Health check failed: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Health check error:", error);
-    throw error;
-  }
+// Active connection tokens
+let activeAuthToken: string | null = null;
+let activeGuestSessionId: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  activeAuthToken = token;
 }
 
-export async function fetchCases(guestSessionId?: string, authToken?: string): Promise<CaseDocument[]> {
-  const headers: Record<string, string> = {};
-  if (guestSessionId) headers['guest-session-id'] = guestSessionId;
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-
-  const response = await fetch(`${API_BASE}/api/v1/cases`, { headers });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch cases: ${response.statusText}`);
-  }
-  return response.json();
+export function setGuestSessionId(sessionId: string | null) {
+  activeGuestSessionId = sessionId;
 }
 
-export async function submitIntake(
-  problemText: string,
-  guestSessionId?: string,
-  authToken?: string
-): Promise<CaseDocument> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  };
-  if (guestSessionId) headers['guest-session-id'] = guestSessionId;
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+export function getOrCreateGuestSessionId(): string {
+  let gid = localStorage.getItem('nyaya_guest_session_id');
+  if (!gid) {
+    gid = 'guest_' + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('nyaya_guest_session_id', gid);
+  }
+  return gid;
+}
 
-  // Since it accepts query params or JSON body depending on routing, 
-  // our FastAPI endpoint defines it as query parameters: triage_case(problem_text: str, ...)
-  const url = new URL(`${API_BASE}/api/v1/cases/triage`);
-  url.searchParams.append("problem_text", problemText);
-
-  const response = await fetch(url.toString(), {
-    method: 'POST',
-    headers
+async function apiRequest(
+  path: string, 
+  method: string = 'GET', 
+  body: any = null,
+  searchParams: Record<string, string> = {}
+) {
+  const url = new URL(`${API_BASE}${path}`);
+  Object.entries(searchParams).forEach(([k, v]) => {
+    url.searchParams.append(k, v);
   });
-  if (!response.ok) {
-    throw new Error(`Intake submission failed: ${response.statusText}`);
+  
+  const headers: Record<string, string> = {};
+  if (body) {
+    headers['Content-Type'] = 'application/json';
   }
+  if (activeGuestSessionId) {
+    headers['guest-session-id'] = activeGuestSessionId;
+  }
+  if (activeAuthToken) {
+    headers['Authorization'] = `Bearer ${activeAuthToken}`;
+  }
+  
+  const response = await fetch(url.toString(), {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+  
+  if (response.status === 401) {
+    setAuthToken(null);
+    throw new Error("Session expired or unauthorized. Please log in again.");
+  }
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `API error: ${response.statusText}`);
+  }
+  
   return response.json();
+}
+
+export async function checkBackendHealth(): Promise<HealthResponse> {
+  return apiRequest('/health');
+}
+
+export async function fetchCases(): Promise<CaseDocument[]> {
+  return apiRequest('/api/v1/cases');
+}
+
+export async function getCase(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}`);
+}
+
+export async function submitIntake(problemText: string): Promise<CaseDocument> {
+  return apiRequest('/api/v1/cases/triage', 'POST', null, { problem_text: problemText });
+}
+
+export async function respondCase(caseId: string, questionId: string, answer: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/respond`, 'POST', null, { question_id: questionId, answer });
+}
+
+export async function analyzeCase(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/analyze`, 'POST');
+}
+
+export async function createActionPlan(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/action-plan`, 'POST');
+}
+
+export async function generateDraftDocument(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/draft`, 'POST');
+}
+
+export async function updateDraftDocument(caseId: string, content: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/draft`, 'PUT', null, { content });
+}
+
+export async function submitStatus(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/submit-status`, 'POST');
+}
+
+export async function claimCase(caseId: string): Promise<CaseDocument> {
+  return apiRequest(`/api/v1/cases/${caseId}/claim`, 'POST');
 }

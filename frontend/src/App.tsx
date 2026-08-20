@@ -6,38 +6,109 @@ import { ActionSteps } from './components/ActionSteps';
 import { EditorConsole } from './components/EditorConsole';
 import { TimelineTracker } from './components/TimelineTracker';
 import { LanguageToggle } from './components/LanguageToggle';
-import { submitIntake, checkBackendHealth, CaseDocument } from './utils/api';
+import { AuthModal } from './components/AuthModal';
+import { CaseDashboard } from './components/CaseDashboard';
+import { onAuthStateChanged, logout, getIdToken, User } from './utils/firebase';
+import { 
+  submitIntake, 
+  respondCase, 
+  analyzeCase, 
+  createActionPlan, 
+  generateDraftDocument, 
+  updateDraftDocument, 
+  submitStatus, 
+  claimCase, 
+  fetchCases,
+  setAuthToken,
+  setGuestSessionId,
+  getOrCreateGuestSessionId,
+  CaseDocument
+} from './utils/api';
 
 export default function App() {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
-  const [showDemo, setShowDemo] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [backendHealth, setBackendHealth] = useState<string | null>(null);
+  // Auth & View states
+  const [user, setUser] = useState<User | null>(null);
+  const [cases, setCases] = useState<CaseDocument[]>([]);
+  const [view, setView] = useState<'landing' | 'dashboard' | 'workspace'>('landing');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   
   // Case Session states
   const [activeCase, setActiveCase] = useState<CaseDocument | null>(null);
   const [locality, setLocality] = useState('');
-  
-  // Check backend health on landing
+
+  // 1. Initial Guest Session and Auth State Observer
   React.useEffect(() => {
-    checkBackendHealth()
-      .then(res => setBackendHealth(`${res.service} is running (Status: ${res.status})`))
-      .catch(() => setBackendHealth('Backend offline / not started'));
+    const guestId = getOrCreateGuestSessionId();
+    setGuestSessionId(guestId);
+
+    const unsubscribe = onAuthStateChanged(async (fbUser) => {
+      setUser(fbUser);
+      if (fbUser) {
+        const token = await getIdToken();
+        setAuthToken(token);
+        try {
+          const list = await fetchCases();
+          setCases(list);
+        } catch (e) {
+          console.error("Error fetching user cases:", e);
+        }
+      } else {
+        setAuthToken(null);
+        try {
+          const list = await fetchCases();
+          setCases(list);
+        } catch (e) {
+          console.error("Error fetching guest cases:", e);
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleStartDemo = () => {
-    setShowDemo(true);
+  const handleAuthSuccess = async () => {
+    const token = await getIdToken();
+    setAuthToken(token);
+    
+    // Automatically claim active guest case if present
+    if (activeCase && activeCase.userId === null) {
+      try {
+        setLoading(true);
+        const claimed = await claimCase(activeCase.caseId);
+        setActiveCase(claimed);
+        alert("Success! This case has been claimed and saved to your account.");
+      } catch (e) {
+        console.error("Error claiming guest case:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    try {
+      const list = await fetchCases();
+      setCases(list);
+      
+      if (activeCase) {
+        setView('workspace');
+      } else {
+        setView(list.length > 0 ? 'dashboard' : 'workspace');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleIntakeSubmit = async (problemText: string) => {
     setLoading(true);
     try {
-      // Phase 1 API Call: Intake Triager
-      const sessionCase = await submitIntake(problemText, "guest-session-123");
+      const sessionCase = await submitIntake(problemText);
       setActiveCase(sessionCase);
+      setView('workspace');
     } catch (e) {
       console.error(e);
-      alert("Backend connection error. Make sure the backend server is running.");
+      alert("Intake submission failed. Check backend connection.");
     } finally {
       setLoading(false);
     }
@@ -49,15 +120,8 @@ export default function App() {
     setLoading(true);
     
     try {
-      // Phase 1 API Call: Clarify Locality
-      const response = await fetch(`http://localhost:8000/api/v1/cases/${activeCase.caseId}/respond?question_id=q_locality&answer=${encodeURIComponent(locality)}`, {
-        method: 'POST'
-      });
-      if (!response.ok) throw new Error("Failed to clarify locality");
-      const updatedCase = await response.json();
+      const updatedCase = await respondCase(activeCase.caseId, 'q_locality', locality);
       setActiveCase(updatedCase);
-      
-      // Auto-trigger RAG research analysis
       await handleRunAnalysis(updatedCase.caseId);
     } catch (e) {
       console.error(e);
@@ -69,20 +133,18 @@ export default function App() {
 
   const handleRunAnalysis = async (caseId: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/cases/${caseId}/analyze`, { method: 'POST' });
-      if (!response.ok) throw new Error("Failed to analyze claims");
-      const updatedCase = await response.json();
+      const updatedCase = await analyzeCase(caseId);
       setActiveCase(updatedCase);
 
-      // Trigger Action plan creation
-      const planResponse = await fetch(`http://localhost:8000/api/v1/cases/${caseId}/action-plan`, { method: 'POST' });
-      const caseWithPlan = await planResponse.json();
+      const caseWithPlan = await createActionPlan(caseId);
       setActiveCase(caseWithPlan);
 
-      // Trigger Draft letter generation
-      const draftResponse = await fetch(`http://localhost:8000/api/v1/cases/${caseId}/draft`, { method: 'POST' });
-      const caseWithDraft = await draftResponse.json();
+      const caseWithDraft = await generateDraftDocument(caseId);
       setActiveCase(caseWithDraft);
+
+      // Refresh list
+      const list = await fetchCases();
+      setCases(list);
     } catch (e) {
       console.error(e);
     }
@@ -103,12 +165,11 @@ export default function App() {
     if (!activeCase) return;
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/cases/${activeCase.caseId}/draft?content=${encodeURIComponent(newContent)}`, {
-        method: 'PUT'
-      });
-      if (!response.ok) throw new Error("Failed to save draft");
-      const updatedCase = await response.json();
+      const updatedCase = await updateDraftDocument(activeCase.caseId, newContent);
       setActiveCase(updatedCase);
+      
+      const list = await fetchCases();
+      setCases(list);
     } catch (e) {
       console.error(e);
       alert("Error saving draft modifications");
@@ -120,7 +181,6 @@ export default function App() {
   const handleExportDraft = () => {
     if (!activeCase || !activeCase.draftDocument) return;
     
-    // Create text file download trigger
     const element = document.createElement("a");
     const file = new Blob([activeCase.draftDocument.content], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
@@ -133,39 +193,32 @@ export default function App() {
   const handleSubmitStatus = async () => {
     if (!activeCase) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/cases/${activeCase.caseId}/submit-status`, { method: 'POST' });
-      if (!response.ok) throw new Error("Failed to update status");
-      const updatedCase = await response.json();
+      const updatedCase = await submitStatus(activeCase.caseId);
       setActiveCase(updatedCase);
+      
+      const list = await fetchCases();
+      setCases(list);
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleRegisterMock = async () => {
-    if (!activeCase) return;
-    try {
-      const response = await fetch(`http://localhost:8000/api/v1/cases/${activeCase.caseId}/claim`, { 
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer mock-user-token' }
-      });
-      if (!response.ok) throw new Error("Failed to register and link case");
-      const updatedCase = await response.json();
-      setActiveCase(updatedCase);
-      alert("Account registration successful! Your case history has been permanently mapped to user-uid.");
-    } catch (e) {
-      console.error(e);
-    }
+  const handleRegisterMock = () => {
+    setAuthModalOpen(true);
   };
 
   const handleReset = () => {
     setActiveCase(null);
     setLocality('');
-    setShowDemo(false);
+    if (user || cases.length > 0) {
+      setView('dashboard');
+    } else {
+      setView('landing');
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       {/* Header bar */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -175,12 +228,45 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            {backendHealth && (
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                backendHealth.includes('offline') ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'
-              }`}>
-                {backendHealth}
-              </span>
+            {user ? (
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-slate-400 hidden sm:inline">{user.email}</span>
+                <button
+                  onClick={() => { setActiveCase(null); setView('dashboard'); }}
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition-colors"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => { setActiveCase(null); setView('workspace'); }}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-semibold"
+                >
+                  New Case
+                </button>
+                <button
+                  onClick={async () => { await logout(); handleReset(); }}
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-rose-400 rounded-lg border border-slate-800 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-xs">
+                {cases.length > 0 && (
+                  <button
+                    onClick={() => { setActiveCase(null); setView('dashboard'); }}
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition-colors"
+                  >
+                    My Guest Cases ({cases.length})
+                  </button>
+                )}
+                <button
+                  onClick={() => setAuthModalOpen(true)}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-semibold"
+                >
+                  Sign In
+                </button>
+              </div>
             )}
             <LanguageToggle currentLanguage={lang} onToggle={setLang} />
           </div>
@@ -189,9 +275,9 @@ export default function App() {
 
       {/* Main body */}
       <main className="flex-1 flex flex-col justify-center py-12 px-6">
-        {!showDemo ? (
+        {view === 'landing' && (
           /* Landing Screen */
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fadeIn">
             <div className="space-y-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-semibold uppercase tracking-wider">
                 ⚖️ AI Civic & Legal Action Navigator
@@ -208,7 +294,7 @@ export default function App() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
-                onClick={handleStartDemo}
+                onClick={() => setView('workspace')}
                 className="glow-btn flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-lg shadow-indigo-600/20 transition-all w-full sm:w-auto justify-center"
               >
                 Try NYAYA
@@ -234,7 +320,19 @@ export default function App() {
               </div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {view === 'dashboard' && (
+          <CaseDashboard 
+            cases={cases} 
+            onSelectCase={(c) => {
+              setActiveCase(c);
+              setView('workspace');
+            }} 
+          />
+        )}
+
+        {view === 'workspace' && (
           /* Active Case Workspace */
           <div className="space-y-8 max-w-6xl mx-auto w-full">
             {activeCase && <TimelineTracker currentStatus={activeCase.status} />}
@@ -244,7 +342,7 @@ export default function App() {
               <IntakePanel onSubmit={handleIntakeSubmit} isLoading={loading} />
             )}
 
-            {/* Step 2: Clarification prompt (Triage results in NEEDS_INFORMATION / RESEARCHING status) */}
+            {/* Step 2: Clarification prompt */}
             {activeCase && activeCase.status === 'TRIAGED' && (
               <div className="w-full max-w-2xl mx-auto glass-panel p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
                 <div className="flex items-start gap-3">
@@ -364,6 +462,13 @@ export default function App() {
           It does not replace a qualified legal professional or an official government decision.
         </p>
       </footer>
+
+      {/* Authentication Modal */}
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+        onSuccess={handleAuthSuccess} 
+      />
     </div>
   );
 }

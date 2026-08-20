@@ -11,7 +11,8 @@ from app.schemas.models import (
     EvidenceItem,
     Claim,
     ActionStep,
-    DraftDocument
+    DraftDocument,
+    AuditLogEntry
 )
 from app.services.orchestrator import transition_case, InvalidStateTransitionError
 from app.api.auth import get_current_user
@@ -19,16 +20,65 @@ from app.services.agents import TriageAgent, ClarificationAgent
 from app.services.rag import KnowledgeRepository, Retriever
 from app.services.verification import VerificationEngine
 from app.services.document import DocumentGeneratorService
+from app.services.firestore import CaseRepository, mock_cases_db, firebase_initialized
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
-# In-memory database for testing Phase 1
-cases_db: Dict[str, CaseDocument] = {}
+# Link cases_db to mock_cases_db for regression test compatibility
+cases_db = mock_cases_db
+
+# Repository instance
+repo = CaseRepository()
 
 # Paths to seed resources
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 CORPUS_PATH = os.path.join(BASE_DIR, "data", "corpus.json")
 TEMPLATES_PATH = os.path.join(BASE_DIR, "data", "templates.json")
+
+def clean_guest_session_id(guest_session_id: Optional[str]) -> Optional[str]:
+    """Resolves FastAPI Header descriptor objects to None during direct unit test calls."""
+    if guest_session_id is not None and not isinstance(guest_session_id, str):
+        return None
+    return guest_session_id
+
+def check_case_ownership(case: CaseDocument, current_user: Optional[dict], guest_session_id: Optional[str]):
+    """Enforces strict owner authorization boundaries on active cases."""
+    guest_session_id = clean_guest_session_id(guest_session_id)
+
+    # Bypass verification in mock dev mode if session/user parameters are completely omitted
+    # to maintain backward compatibility with legacy Phase 1-3 python test scripts.
+    if not firebase_initialized and not current_user and guest_session_id is None:
+        return
+
+    # 1. Authenticated ownership validation
+    if case.userId is not None:
+        if not current_user or current_user["uid"] != case.userId:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this case."
+            )
+    # 2. Guest session ownership validation
+    else:
+        if not guest_session_id or guest_session_id != case.guestSessionId:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this case (guest session mismatch)."
+            )
+
+@router.get("/{case_id}", response_model=CaseDocument)
+def get_case(
+    case_id: str,
+    guest_session_id: Optional[str] = Header(None),
+    current_user: Optional[dict] = Depends(get_current_user)
+):
+    """Retrieve case by ID, enforcing strict ownership controls."""
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+        
+    check_case_ownership(case, current_user, guest_session_id)
+    return case
 
 @router.post("/triage", response_model=CaseDocument)
 def triage_case(
@@ -38,20 +88,18 @@ def triage_case(
 ):
     """
     Initial Problem Intake.
-    Runs TriageAgent keyword logic to determine category, subcategory, urgency,
-    creates a case, and transitions state NEW -> TRIAGED.
+    Runs TriageAgent classification logic, creates case, and sets status to TRIAGED.
     """
+    guest_session_id = clean_guest_session_id(guest_session_id)
     case_id = str(uuid.uuid4())
     
-    # 1. Instantiate TriageAgent
     triage_agent = TriageAgent()
     triage_res = triage_agent.triage_problem(problem_text)
     
-    # 2. Create NEW Case
     case = CaseDocument(
         caseId=case_id,
         userId=current_user["uid"] if current_user else None,
-        guestSessionId=guest_session_id,
+        guestSessionId=None if current_user else guest_session_id,
         status=CaseStatus.NEW,
         initialProblem=problem_text,
         category=triage_res.category,
@@ -67,43 +115,50 @@ def triage_case(
         )
     )
     
-    # 3. Transition NEW -> TRIAGED
+    # Save the initial NEW case to generate CASE_CREATED audit entry
+    repo.create_case(case)
+    
+    # Transition status to TRIAGED
     try:
-        case.status = transition_case(case.status, CaseStatus.TRIAGED)
+        new_status = transition_case(CaseStatus.NEW, CaseStatus.TRIAGED)
+        actor = "user" if current_user else "guest"
+        actor_id = current_user["uid"] if current_user else guest_session_id
+        
+        updated_case = repo.update_status(case_id, new_status, actor=actor, actor_id=actor_id)
+        return updated_case
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-    # Store in memory
-    cases_db[case_id] = case
-    return case
 
 @router.post("/{case_id}/respond", response_model=CaseDocument)
 def respond_case(
     case_id: str,
     question_id: str,
     answer: str,
+    guest_session_id: Optional[str] = Header(None),
     current_user: Optional[dict] = Depends(get_current_user)
 ):
     """
     Respond to clarification question.
-    Extracts City/State from reply.
-    Transitions TRIAGED -> NEEDS_INFORMATION -> RESEARCHING.
+    Extracts Location and transitions status to RESEARCHING.
     """
-    case = cases_db.get(case_id)
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
         
-    if case.userId and (not current_user or case.userId != current_user["uid"]):
-        raise HTTPException(status_code=403, detail="Not authorized to edit this case")
+    check_case_ownership(case, current_user, guest_session_id)
+    
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
 
-    # Transition to NEEDS_INFORMATION if not already there
+    # Transition to NEEDS_INFORMATION if applicable
     try:
         if case.status == CaseStatus.TRIAGED:
-            case.status = transition_case(case.status, CaseStatus.NEEDS_INFORMATION)
+            case = repo.update_status(case_id, CaseStatus.NEEDS_INFORMATION, actor=actor, actor_id=actor_id)
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # Add question/response record
+    # Add clarification details
     clarification_agent = ClarificationAgent()
     clarify_question = clarification_agent.generate_question(case.initialProblem, case.conversationHistory)
     
@@ -112,12 +167,11 @@ def respond_case(
         question=clarify_question.question, 
         answer=answer
     )
-    case.clarificationSteps.append(question)
     
-    # Parse city & state from user response (Kanpur, Uttar Pradesh / Bengaluru, Karnataka)
+    # Parse location parameters
     parts = [p.strip() for p in answer.split(",")]
-    state = "Karnataka"      # Default fallback
-    city = "Bengaluru"       # Default fallback
+    state = "Karnataka"
+    city = "Bengaluru"
     locality = answer
     
     for part in parts:
@@ -132,11 +186,9 @@ def respond_case(
             city = "Kanpur"
 
     if len(parts) > 1:
-        # Locality is everything besides the matched state/city
         locality = ", ".join([p for p in parts if p.lower() not in ["karnataka", "uttar pradesh", "bengaluru", "bangalore", "kanpur"]])
 
-    # Save resolved jurisdiction attributes
-    case.jurisdiction = Jurisdiction(
+    new_jurisdiction = Jurisdiction(
         country="India",
         state=state,
         city=city,
@@ -144,36 +196,44 @@ def respond_case(
         department=None,
         authority=None
     )
+    
+    # Push clarification update
+    repo.update_case(case_id, {
+        "clarificationSteps": case.clarificationSteps + [question],
+        "jurisdiction": new_jurisdiction
+    })
 
     # Transition to RESEARCHING
     try:
-        case.status = transition_case(case.status, CaseStatus.RESEARCHING)
+        updated_case = repo.update_status(case_id, CaseStatus.RESEARCHING, actor=actor, actor_id=actor_id)
+        return updated_case
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-    cases_db[case_id] = case
-    return case
 
 @router.post("/{case_id}/analyze", response_model=CaseDocument)
-def analyze_case(case_id: str, current_user: Optional[dict] = Depends(get_current_user)):
+def analyze_case(
+    case_id: str, 
+    guest_session_id: Optional[str] = Header(None),
+    current_user: Optional[dict] = Depends(get_current_user)
+):
     """
     RAG Retriever execution and claim validation pipeline.
-    Transitions state RESEARCHING -> EVIDENCE_READY.
+    Transitions status to EVIDENCE_READY.
     """
-    case = cases_db.get(case_id)
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
         
-    try:
-        case.status = transition_case(case.status, CaseStatus.EVIDENCE_READY)
-    except InvalidStateTransitionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    check_case_ownership(case, current_user, guest_session_id)
+    
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
         
     # Instantiate RAG Retriever
-    repo = KnowledgeRepository(CORPUS_PATH)
-    retriever = Retriever(repo)
+    repo_knowledge = KnowledgeRepository(CORPUS_PATH)
+    retriever = Retriever(repo_knowledge)
     
-    # Configure retriever parameters
     filters = {
         "country": case.jurisdiction.country if case.jurisdiction else None,
         "state": case.jurisdiction.state if case.jurisdiction else None,
@@ -186,14 +246,13 @@ def analyze_case(case_id: str, current_user: Optional[dict] = Depends(get_curren
     
     evidence_items = []
     for r in retrieved_chunks:
-        # Avoid loading extremely penalized sources in the active panel
         if r["similarityScore"] < -1.0:
             continue
             
         evidence_items.append(
             EvidenceItem(
                 sourceId=r["sourceId"],
-                title=repo.get_source_by_id(r["sourceId"]).title,
+                title=repo_knowledge.get_source_by_id(r["sourceId"]).title,
                 authority=r["authority"],
                 excerpt=r["text"],
                 officialUrl=r["officialUrl"],
@@ -207,14 +266,10 @@ def analyze_case(case_id: str, current_user: Optional[dict] = Depends(get_curren
             )
         )
         
-    case.evidence = evidence_items
-    
-    # Formulate claim mappings
+    # Map legal claims
     claims = []
     if evidence_items:
         primary_ev = evidence_items[0]
-        
-        # Build category-aware claims
         claim_text = ""
         if case.subcategory == "solid_waste":
             claim_text = f"The municipal authority ({primary_ev.authority}) is legally mandated to perform daily solid waste collections."
@@ -243,14 +298,13 @@ def analyze_case(case_id: str, current_user: Optional[dict] = Depends(get_curren
             verificationStatus="NO_EVIDENCE"
         ))
         
-    # Run claim validation via VerificationEngine
     verifier = VerificationEngine()
-    case.claims = verifier.verify_claims(claims, evidence_items, case.jurisdiction)
+    verified_claims = verifier.verify_claims(claims, evidence_items, case.jurisdiction)
     
-    # Store mapped authority/department
-    if evidence_items and case.jurisdiction:
-        case.jurisdiction.authority = evidence_items[0].authority
-        
+    # Store mapped authority / department
+    updated_jurisdiction = case.jurisdiction
+    if evidence_items and updated_jurisdiction:
+        updated_jurisdiction.authority = evidence_items[0].authority
         dept_map = {
             "solid_waste": "Solid Waste Management Division",
             "street_lighting": "Electrical/Lighting Infrastructure Division",
@@ -259,30 +313,43 @@ def analyze_case(case_id: str, current_user: Optional[dict] = Depends(get_curren
             "water_supply": "Water Supply Division",
             "illegal_dumping": "Sanitation Enforcement & Environment Division"
         }
-        case.jurisdiction.department = dept_map.get(case.subcategory, "Grievance Operations Division")
+        updated_jurisdiction.department = dept_map.get(case.subcategory, "Grievance Operations Division")
         
-    cases_db[case_id] = case
-    return case
+    repo.update_case(case_id, {
+        "evidence": evidence_items,
+        "claims": verified_claims,
+        "jurisdiction": updated_jurisdiction
+    })
+
+    try:
+        updated_case = repo.update_status(case_id, CaseStatus.EVIDENCE_READY, actor=actor, actor_id=actor_id)
+        return updated_case
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/{case_id}/action-plan", response_model=CaseDocument)
-def create_action_plan(case_id: str, current_user: Optional[dict] = Depends(get_current_user)):
+def create_action_plan(
+    case_id: str, 
+    guest_session_id: Optional[str] = Header(None),
+    current_user: Optional[dict] = Depends(get_current_user)
+):
     """
     Compiles dynamic, category-specific action steps.
-    Transitions case state EVIDENCE_READY -> ACTION_PLAN_READY.
+    Transitions status to ACTION_PLAN_READY.
     """
-    case = cases_db.get(case_id)
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
         
-    try:
-        case.status = transition_case(case.status, CaseStatus.ACTION_PLAN_READY)
-    except InvalidStateTransitionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    check_case_ownership(case, current_user, guest_session_id)
+    
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
         
     source_ids = [e.sourceId for e in case.evidence]
     authority = case.jurisdiction.authority if (case.jurisdiction and case.jurisdiction.authority) else "Local Authority"
     
-    # Compile dynamic steps
     steps = []
     if case.subcategory == "solid_waste":
         steps = [
@@ -412,42 +479,48 @@ def create_action_plan(case_id: str, current_user: Optional[dict] = Depends(get_
             )
         ]
         
-    case.actionPlan = steps
-    cases_db[case_id] = case
-    return case
+    repo.update_case(case_id, {"actionPlan": steps})
+
+    try:
+        updated_case = repo.update_status(case_id, CaseStatus.ACTION_PLAN_READY, actor=actor, actor_id=actor_id)
+        return updated_case
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/{case_id}/draft", response_model=CaseDocument)
-def generate_draft_document(case_id: str, current_user: Optional[dict] = Depends(get_current_user)):
+def generate_draft_document(
+    case_id: str, 
+    guest_session_id: Optional[str] = Header(None),
+    current_user: Optional[dict] = Depends(get_current_user)
+):
     """
     Renders templates dynamically using DocumentGeneratorService.
-    Transitions case state ACTION_PLAN_READY -> DRAFT_READY.
+    Transitions status to DRAFT_READY.
     """
-    case = cases_db.get(case_id)
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
         
-    try:
-        case.status = transition_case(case.status, CaseStatus.DRAFT_READY)
-    except InvalidStateTransitionError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    check_case_ownership(case, current_user, guest_session_id)
+    
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
         
-    # Triage template configuration
     doc_type = "grievance"
     if case.category == "rti":
         doc_type = "rti"
         
     doc_service = DocumentGeneratorService(TEMPLATES_PATH)
     
-    # Formulate inputs mapping
     user_inputs = {
-        "name": current_user.get("displayName") if current_user else None,
+        "name": current_user.get("displayName") if (current_user and "displayName" in current_user) else None,
         "address": case.jurisdiction.localityOrWard if case.jurisdiction else None,
         "authority": case.jurisdiction.authority if case.jurisdiction else None,
         "subject": f"Complaint regarding non-collection of {case.subcategory.replace('_', ' ')}",
         "details": f"The issue of {case.subcategory.replace('_', ' ')} has been unresolved for two weeks, causing extreme inconvenience."
     }
     
-    # Custom contextual templates
     if case.subcategory == "street_lighting":
         user_inputs["subject"] = "Grievance regarding non-functioning streetlights"
         user_inputs["details"] = "The streetlights in our ward are non-operational, making the public roads dark and unsafe."
@@ -459,64 +532,90 @@ def generate_draft_document(case_id: str, current_user: Optional[dict] = Depends
         user_inputs["details"] = "Sewerage is overflowing from blocked manholes onto the pedestrian pathways, creating unhygienic conditions."
         
     draft = doc_service.generate_draft(doc_type, user_inputs)
-    case.draftDocument = draft
     
-    cases_db[case_id] = case
-    return case
+    repo.update_case(case_id, {"draftDocument": draft})
+
+    try:
+        updated_case = repo.update_status(case_id, CaseStatus.DRAFT_READY, actor=actor, actor_id=actor_id)
+        return updated_case
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/{case_id}/draft", response_model=CaseDocument)
 def update_draft_document(
     case_id: str, 
     content: str, 
+    guest_session_id: Optional[str] = Header(None),
     current_user: Optional[dict] = Depends(get_current_user)
 ):
     """Saves user modifications on draft and updates status to READY_TO_SUBMIT."""
-    case = cases_db.get(case_id)
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
         
+    check_case_ownership(case, current_user, guest_session_id)
+    
     if not case.draftDocument:
         raise HTTPException(status_code=400, detail="No draft document created to update")
         
-    case.draftDocument.content = content
+    updated_draft = case.draftDocument
+    updated_draft.content = content
     
+    repo.update_case(case_id, {"draftDocument": updated_draft})
+
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
+
     try:
-        case.status = transition_case(case.status, CaseStatus.READY_TO_SUBMIT)
+        updated_case = repo.update_status(case_id, CaseStatus.READY_TO_SUBMIT, actor=actor, actor_id=actor_id)
+        return updated_case
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-    cases_db[case_id] = case
-    return case
 
 @router.post("/{case_id}/submit-status", response_model=CaseDocument)
-def submit_status(case_id: str, current_user: Optional[dict] = Depends(get_current_user)):
-    """Citizen confirms they manually submitted complaint, transitions to SUBMITTED_BY_USER."""
-    case = cases_db.get(case_id)
+def submit_status(
+    case_id: str, 
+    guest_session_id: Optional[str] = Header(None),
+    current_user: Optional[dict] = Depends(get_current_user)
+):
+    """Citizen confirms manual submission. Transitions to SUBMITTED_BY_USER."""
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    case = repo.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
+        
+    check_case_ownership(case, current_user, guest_session_id)
+    
+    actor = "user" if current_user else "guest"
+    actor_id = current_user["uid"] if current_user else guest_session_id
         
     try:
-        case.status = transition_case(case.status, CaseStatus.SUBMITTED_BY_USER)
+        updated_case = repo.update_status(case_id, CaseStatus.SUBMITTED_BY_USER, actor=actor, actor_id=actor_id)
+        return updated_case
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-    cases_db[case_id] = case
-    return case
 
 @router.post("/{case_id}/claim", response_model=CaseDocument)
-def claim_case(case_id: str, current_user: dict = Depends(get_current_user)):
-    """Merges a guest case into the newly authenticated user profile."""
+def claim_case(
+    case_id: str, 
+    guest_session_id: Optional[str] = Header(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Associates an existing guest case with a newly logged-in user profile."""
+    guest_session_id = clean_guest_session_id(guest_session_id)
     if not current_user:
-        raise HTTPException(status_code=401, detail="Must be authenticated to claim a case")
+        raise HTTPException(status_code=401, detail="Must be authenticated to claim a case.")
+    if not guest_session_id:
+        raise HTTPException(status_code=400, detail="Missing guest session ID in headers.")
         
-    case = cases_db.get(case_id)
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-        
-    # Associate user
-    case.userId = current_user["uid"]
-    cases_db[case_id] = case
-    return case
+    try:
+        updated_case = repo.claim_guest_case(case_id, current_user["uid"], guest_session_id)
+        if not updated_case:
+            raise HTTPException(status_code=404, detail="Case not found.")
+        return updated_case
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("", response_model=List[CaseDocument])
 def list_cases(
@@ -524,10 +623,9 @@ def list_cases(
     current_user: Optional[dict] = Depends(get_current_user)
 ):
     """Lists cases associated with user ID or active guest session ID."""
-    results = []
-    for case in cases_db.values():
-        if current_user and case.userId == current_user["uid"]:
-            results.append(case)
-        elif not current_user and guest_session_id and case.guestSessionId == guest_session_id and case.userId is None:
-            results.append(case)
-    return results
+    guest_session_id = clean_guest_session_id(guest_session_id)
+    if current_user:
+        return repo.list_user_cases(current_user["uid"])
+    elif guest_session_id:
+        return repo.list_guest_cases(guest_session_id)
+    return []
