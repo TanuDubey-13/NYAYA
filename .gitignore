@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+*service-account*.json
+firebase-credentials.json
+*.json.local
 
 # Python / Backend fallbacks
 __pycache__/
