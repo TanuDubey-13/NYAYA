@@ -118,6 +118,91 @@
       "officialUrl": "https://rti.gov.in",
       "content": "Section 6(1): Request for obtaining information. Any citizen of India can file an RTI application seeking details or inspection of government records. The Public Information Officer must provide the information within 30 days of receiving the request.",
       "lastVerified": "2025-12-01"
+    },
+    {
+      "sourceId": "SRC-008",
+      "title": "Solid Waste Management Rules, 2016",
+      "authority": "Ministry of Environment, Forest and Climate Change, Govt of India",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "solid_waste",
+      "tags": ["garbage", "waste", "sanitation", "solid waste", "refuse", "collection", "litter", "cleanup"],
+      "officialUrl": "https://moef.gov.in",
+      "content": "Rule 15: Duties of Local Authorities. Every local authority shall be responsible for daily collection, segregation, storage, transportation, processing, and disposal of municipal solid waste. Central rules mandate door-to-door collection of segregated waste and prohibition of littering in all cities of India.",
+      "lastVerified": "2026-04-12"
+    },
+    {
+      "sourceId": "SRC-009",
+      "title": "National Street Light National Programme (SLNP) Guidelines",
+      "authority": "Ministry of Power, Govt of India",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "street_lighting",
+      "tags": ["light", "street light", "lamp", "bulb", "dark", "lighting", "electricity", "pole"],
+      "officialUrl": "https://powermin.gov.in",
+      "content": "Section 2.4: Maintenance of Smart Lighting. Local municipal bodies under the SLNP must ensure that all public lamps and streetlights are functional. Maintenance agencies are obligated to repair or replace non-functional streetlights within 72 hours of citizen reports.",
+      "lastVerified": "2026-03-15"
+    },
+    {
+      "sourceId": "SRC-010",
+      "title": "Indian Road Congress (IRC) Maintenance Standards",
+      "authority": "Ministry of Road Transport and Highways, Govt of India",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "road_maintenance",
+      "tags": ["pothole", "road", "street", "pavement", "tarmac", "asphalt", "cracks", "tar"],
+      "officialUrl": "https://morth.nic.in",
+      "content": "IRC Section 5: Maintenance Operations. Pothole repair and asphalt patching must be executed on all municipal and public roads within a maximum of 7 to 10 days of defect identification to ensure commuter safety and prevent traffic bottlenecks.",
+      "lastVerified": "2026-05-01"
+    },
+    {
+      "sourceId": "SRC-011",
+      "title": "National Sewerage and Urban Drainage Guidelines",
+      "authority": "Ministry of Housing and Urban Affairs, Govt of India",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "sewerage_drainage",
+      "tags": ["sewage", "sewer", "drain", "overflow", "drainage", "manhole", "blockage", "wastewater"],
+      "officialUrl": "https://mohua.gov.in",
+      "content": "Section 14: Sewer Pipeline Rectification. Municipal sanitation units must clear blocked pipelines and sewage overflows from residential streets within 24 to 48 hours to minimize bacterial hazards and protect public health.",
+      "lastVerified": "2026-04-20"
+    },
+    {
+      "sourceId": "SRC-012",
+      "title": "National Water Quality Standards & Distribution Guidelines",
+      "authority": "Ministry of Jal Shakti, Govt of India",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "municipal_grievance",
+      "subcategory": "water_supply",
+      "tags": ["water", "supply", "tap", "leakage", "drinking", "contamination", "pipeline", "pressure"],
+      "officialUrl": "https://jalshakti.gov.in",
+      "content": "Rule 8: Quality Assurance of Water Supply. Supply of clean drinking water is a core municipal function. Complaints regarding contaminated water or major pipeline leakages must be attended to immediately and resolved within 48 hours.",
+      "lastVerified": "2026-02-18"
     }
   ]
 }

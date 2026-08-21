@@ -9,10 +9,13 @@ class Settings(BaseSettings):
     # AI & Firebase (Keys have blank default to avoid throwing errors on direct local run)
     GEMINI_API_KEY: str = ""
     FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_CLIENT_EMAIL: str = ""
+    FIREBASE_PRIVATE_KEY: str = ""
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
 
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 settings = Settings()

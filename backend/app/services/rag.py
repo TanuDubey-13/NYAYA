@@ -167,7 +167,7 @@ class Retriever:
                 if filter_state.lower() != src_state:
                     state_mismatch = True
                     
-            if filter_city and src_city:
+            if filter_city and src_city and src_city != "national" and src_city != "":
                 if filter_city.lower() != src_city:
                     city_mismatch = True
 
