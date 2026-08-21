@@ -13,5 +13,10 @@
     "title": "General Civic Application",
     "placeholders": ["name", "address", "authority", "subject", "details"],
     "body": "To,\n[ENTER AUTHORITY]\n\nSubject: Application regarding [ENTER SUBJECT]\n\nDear Sir/Madam,\n\nI, [ENTER NAME] (Address: [ENTER ADDRESS]), am writing this application to bring to your attention the following matter: [ENTER DETAILS].\n\nI request you to resolve this matter as soon as possible.\n\nThanking you,\n\nDate:\n\nSincerely,\n[ENTER NAME]"
+  },
+  "legal": {
+    "title": "Legal Grievance / Formal Police Complaint",
+    "placeholders": ["name", "address", "authority", "subject", "details"],
+    "body": "To,\nOfficer-in-Charge / Magistrate,\n[ENTER AUTHORITY]\n\nSubject: [ENTER SUBJECT]\n\nSir/Madam,\n\nI, [ENTER NAME], residing at [ENTER ADDRESS], am filing this formal complaint to report the following incident:\n\n[ENTER DETAILS]\n\nI request you to register this complaint under the appropriate provisions of law, initiate an investigation, and take immediate action.\n\nSincerely,\n[ENTER NAME]\n\nDate:\nPhone:"
   }
 }

@@ -11,16 +11,16 @@ class TriageAgent:
     SYSTEM_INSTRUCTION = (
         "You are the NYAYA Triage Agent. Your task is to analyze a citizen's civic or legal problem and extract structured metadata.\n"
         "Follow these rules strictly:\n"
-        "1. Understand the problem and classify it into a category ('municipal_grievance', 'rti', or 'other').\n"
-        "2. Identify the most specific subcategory. For 'municipal_grievance', choose from: 'solid_waste', 'street_lighting', 'road_maintenance', 'sewerage_drainage', 'water_supply', 'illegal_dumping', or 'general'. For 'rti', choose 'rti_request'.\n"
-        "3. Set urgency to 'low', 'normal', or 'high'. High is for safety hazards, flooding, active accidents, sewage leaks.\n"
+        "1. Understand the problem and classify it into a category ('municipal_grievance', 'rti', 'legal_grievance', or 'other').\n"
+        "2. Identify the most specific subcategory. For 'municipal_grievance', choose from: 'solid_waste', 'street_lighting', 'road_maintenance', 'sewerage_drainage', 'water_supply', 'illegal_dumping', or 'general'. For 'rti', choose 'rti_request'. For 'legal_grievance', choose from: 'domestic_violence', 'consumer_dispute', 'cyber_crime', or 'general_crime'.\n"
+        "3. Set urgency to 'low', 'normal', or 'high'. High is for safety hazards, domestic abuse, ongoing cyber fraud, flooding, or active accidents.\n"
         "4. Extract location parameters (country, state, city, locality_or_ward) if explicitly provided in the text. Do not invent or guess these values; leave them as empty strings ('') if not provided.\n"
-        "5. If the target department is obvious, extract it (e.g. 'sanitation', 'engineering', 'electrical').\n"
+        "5. If the target department is obvious, extract it (e.g. 'sanitation', 'engineering', 'electrical', 'legal-cell', 'police').\n"
         "6. NEVER invent authority names or legal sections. Leave authority empty ('') if not known.\n"
         "7. Identify missing information (e.g. 'city', 'state', 'locality_or_ward' if they are not provided).\n"
         "8. If there is missing info, write a polite clarification question asking for the missing details. Limit to ONE question at a time.\n"
         "9. If jurisdiction details (locality/ward and city/state) are already present, 'missing_information' must be empty, and 'clarification_question' must be empty ('').\n"
-        "10. Provide a confidence rating between 0.0 and 1.0. If you cannot confidently identify the category (confidence < 0.6), set the clarification_question to: 'I am not yet confident which civic service this concerns. Could you briefly describe what is happening?'\n"
+        "10. Provide a confidence rating between 0.0 and 1.0. If you cannot confidently identify the category (confidence < 0.6), set the clarification_question to: 'I am not yet confident which civic or legal service this concerns. Could you briefly describe what is happening?'\n"
         "11. Return ONLY the requested structured JSON matching the provided schema."
     )
 
@@ -110,7 +110,27 @@ class TriageAgent:
         subcategory = "solid_waste"
         urgency = "normal"
         
-        if any(kw in text_lower for kw in ["sewage", "sewer", "overflow", "drainage", "manhole", "blockage"]):
+        # 1. Legal Grievances
+        if any(kw in text_lower for kw in ["violence", "abuse", "domestic", "husband", "wife", "spouse", "harassed", "beating", "assault"]):
+            category = "legal_grievance"
+            subcategory = "domestic_violence"
+            urgency = "high"
+        elif any(kw in text_lower for kw in ["consumer", "merchant", "product", "refund", "replace", "bought", "defective", "seller", "shop", "cheated"]):
+            category = "legal_grievance"
+            subcategory = "consumer_dispute"
+        elif any(kw in text_lower for kw in ["cyber", "hacked", "phishing", "scam", "online fraud", "bank fraud", "otp", "stolen money"]):
+            category = "legal_grievance"
+            subcategory = "cyber_crime"
+            urgency = "high"
+        elif any(kw in text_lower for kw in ["theft", "stolen", "robbery", "burgled", "police", "fir", "stole"]):
+            category = "legal_grievance"
+            subcategory = "general_crime"
+        # 2. RTI Requests
+        elif "rti" in text_lower or ("information" in text_lower and any(kw in text_lower for kw in ["government", "department", "spent", "funds", "public", "request"])):
+            category = "rti"
+            subcategory = "rti_request"
+        # 3. Municipal Grievances
+        elif any(kw in text_lower for kw in ["sewage", "sewer", "overflow", "drainage", "manhole", "blockage"]):
             subcategory = "sewerage_drainage"
             urgency = "high"
         elif any(kw in text_lower for kw in ["light", "lamp", "bulb", "dark", "lighting", "street light", "electricity"]):
@@ -123,9 +143,6 @@ class TriageAgent:
             subcategory = "solid_waste"
         elif any(kw in text_lower for kw in ["pothole", "road", "street", "pavement", "asphalt", "tar"]):
             subcategory = "road_maintenance"
-        elif "rti" in text_lower or ("information" in text_lower and any(kw in text_lower for kw in ["government", "department", "spent", "funds", "public", "request"])):
-            category = "rti"
-            subcategory = "rti_request"
 
         if any(kw in text_lower for kw in ["hazard", "accident", "emergency", "flooding", "risk"]):
             urgency = "high"

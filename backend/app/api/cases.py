@@ -283,6 +283,14 @@ def analyze_case(
             claim_text = f"The municipal board ({primary_ev.authority}) must supply potable water and repair water pipe leakages."
         elif case.subcategory == "illegal_dumping":
             claim_text = f"The environmental protection team ({primary_ev.authority}) must clean up illegal trash dumps and penalize offenders."
+        elif case.subcategory == "domestic_violence":
+            claim_text = f"Under the Domestic Violence Act, 2005, protection officers and police must provide immediate shelter, medical support, and protection orders."
+        elif case.subcategory == "consumer_dispute":
+            claim_text = f"The Consumer Protection Act, 2019, grants consumers the right to file claims against defective goods or deficient services for refund or compensation."
+        elif case.subcategory == "cyber_crime":
+            claim_text = f"Section 66D of the IT Act, 2000, establishes criminal penalties for online fraud, and police are required to register FIRs and freeze fraudulent accounts."
+        elif case.subcategory == "general_crime":
+            claim_text = f"Under criminal law, police departments must register a First Information Report (FIR) for theft, burglary, or physical assault."
         else:
             claim_text = f"The authority ({primary_ev.authority}) must address issues reported under this category."
             
@@ -311,7 +319,11 @@ def analyze_case(
             "road_maintenance": "Engineering & Road Works Division",
             "sewerage_drainage": "Sewerage Operations Division",
             "water_supply": "Water Supply Division",
-            "illegal_dumping": "Sanitation Enforcement & Environment Division"
+            "illegal_dumping": "Sanitation Enforcement & Environment Division",
+            "domestic_violence": "Women & Child Development Department / Protection Cell",
+            "consumer_dispute": "District Consumer Disputes Redressal Commission",
+            "cyber_crime": "Cyber Crime Police Division / IT Cell",
+            "general_crime": "Local Law Enforcement & Police Division"
         }
         updated_jurisdiction.department = dept_map.get(case.subcategory, "Grievance Operations Division")
         
@@ -459,6 +471,114 @@ def create_action_plan(
                 sourceIds=source_ids
             )
         ]
+    elif case.subcategory == "domestic_violence":
+        steps = [
+            ActionStep(
+                stepNumber=1,
+                action="Ensure immediate safety",
+                whyItMatters="Your physical well-being is the top priority; find a safe space or call helpline 112/181.",
+                requiredEvidence=["Safe shelter location coordinates"],
+                authority="Emergency Services / Protection Officer",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=2,
+                action="Document incidents of abuse",
+                whyItMatters="Medical reports, photos of injuries, and copies of threatening text messages serve as legal evidence.",
+                requiredEvidence=["Photos, medical certificates, call logs"],
+                authority="Self Documentation",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=3,
+                action="File petition under Section 12",
+                whyItMatters="A formal petition to the magistrate secures protection, residence, and maintenance orders.",
+                requiredEvidence=["Completed petition draft under PWDVA"],
+                authority="Judicial Magistrate / Protection Officer",
+                sourceIds=source_ids
+            )
+        ]
+    elif case.subcategory == "consumer_dispute":
+        steps = [
+            ActionStep(
+                stepNumber=1,
+                action="Send legal notice to merchant",
+                whyItMatters="A formal notice gives the merchant 15 days to resolve the dispute before litigation.",
+                requiredEvidence=["Copy of formal merchant notice and postal receipt"],
+                authority="Self Action",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=2,
+                action="Compile transaction evidence",
+                whyItMatters="Invoices, warranty cards, and communication logs prove transaction terms and deficiency.",
+                requiredEvidence=["Invoice copy, warranty certificate, email threads"],
+                authority="Self Action",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=3,
+                action="File complaint via e-Daakhil",
+                whyItMatters="Online filing through e-Daakhil registers your case directly with the Consumer Commission.",
+                requiredEvidence=["e-Daakhil payment receipt and petition copy"],
+                authority="District Consumer Disputes Redressal Commission",
+                sourceIds=source_ids
+            )
+        ]
+    elif case.subcategory == "cyber_crime":
+        steps = [
+            ActionStep(
+                stepNumber=1,
+                action="Block compromised accounts",
+                whyItMatters="Immediately freezing credit cards or bank accounts prevents further unauthorized transactions.",
+                requiredEvidence=["Bank transaction block confirmation screenshot"],
+                authority="Your Bank / Financial Institution",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=2,
+                action="Collect electronic logs and screenshots",
+                whyItMatters="Screenshots of payment gateways, chat history, domain URLs, and fraud emails serve as key evidence.",
+                requiredEvidence=["Transaction screenshots, SMS logs, WhatsApp chats"],
+                authority="Self Documentation",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=3,
+                action="Register cyber complaint online",
+                whyItMatters="Filing a report at cybercrime.gov.in triggers active police tracing of the scammer's bank accounts.",
+                requiredEvidence=["National Cyber Crime Portal acknowledgment receipt"],
+                authority="Cyber Crime Police Division / IT Cell",
+                sourceIds=source_ids
+            )
+        ]
+    elif case.subcategory == "general_crime":
+        steps = [
+            ActionStep(
+                stepNumber=1,
+                action="Check for witness and CCTV proof",
+                whyItMatters="Identifying eyewitnesses and seeking nearby security camera footage increases recovery chances.",
+                requiredEvidence=["Names of witnesses, location of CCTV cameras"],
+                authority="Self Action",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=2,
+                action="Draft police complaint letter",
+                whyItMatters="A clear description of the stolen items (including serial numbers or IMEI numbers) is needed.",
+                requiredEvidence=["Invoices showing item serial/IMEI numbers"],
+                authority="Self Action",
+                sourceIds=source_ids
+            ),
+            ActionStep(
+                stepNumber=3,
+                action="Register First Information Report (FIR)",
+                whyItMatters="An official FIR mandates police investigation under the criminal code.",
+                requiredEvidence=["Signed copy of FIR (free of charge)"],
+                authority="Local Police Station / SHO Office",
+                sourceIds=source_ids
+            )
+        ]
     else:
         steps = [
             ActionStep(
@@ -509,7 +629,9 @@ def generate_draft_document(
         
     doc_type = "grievance"
     if case.category == "rti":
-        doc_type = "rti"
+      doc_type = "rti"
+    elif case.category == "legal_grievance":
+      doc_type = "legal"
         
     doc_service = DocumentGeneratorService(TEMPLATES_PATH)
     
@@ -530,6 +652,18 @@ def generate_draft_document(
     elif case.subcategory == "sewerage_drainage":
         user_inputs["subject"] = "Urgent rectification of overflowing sewer lines"
         user_inputs["details"] = "Sewerage is overflowing from blocked manholes onto the pedestrian pathways, creating unhygienic conditions."
+    elif case.subcategory == "domestic_violence":
+        user_inputs["subject"] = "Petition under Protection of Women from Domestic Violence Act, 2005"
+        user_inputs["details"] = "I am filing this petition to seek an urgent protection and residence order due to continuous harassment and abuse in my domestic relationship."
+    elif case.subcategory == "consumer_dispute":
+        user_inputs["subject"] = "Deficiency of Services and Defective Product Grievance Notice"
+        user_inputs["details"] = "I purchased goods/services that proved deficient/defective. Despite repeated requests, the merchant has refused a replacement/refund."
+    elif case.subcategory == "cyber_crime":
+        user_inputs["subject"] = "Report regarding cyber fraud and phishing theft"
+        user_inputs["details"] = "I was defrauded online resulting in unauthorized debit transactions from my account. I request immediate registration of FIR and account tracing."
+    elif case.subcategory == "general_crime":
+        user_inputs["subject"] = "Complaint regarding theft of personal belongings"
+        user_inputs["details"] = "My personal belongings (detailed inside) were stolen. I request immediate registration of a First Information Report (FIR) and recovery investigation."
         
     draft = doc_service.generate_draft(doc_type, user_inputs)
     

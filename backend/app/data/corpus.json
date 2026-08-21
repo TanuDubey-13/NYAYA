@@ -203,6 +203,74 @@
       "officialUrl": "https://jalshakti.gov.in",
       "content": "Rule 8: Quality Assurance of Water Supply. Supply of clean drinking water is a core municipal function. Complaints regarding contaminated water or major pipeline leakages must be attended to immediately and resolved within 48 hours.",
       "lastVerified": "2026-02-18"
+    },
+    {
+      "sourceId": "SRC-013",
+      "title": "Protection of Women from Domestic Violence Act, 2005",
+      "authority": "Protection Officer / Ministry of Women and Child Development",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "legal_grievance",
+      "subcategory": "domestic_violence",
+      "tags": ["abuse", "violence", "domestic", "wife", "husband", "spouse", "assault", "harassed", "beating", "fight"],
+      "officialUrl": "https://wcd.nic.in",
+      "content": "Section 12: Application to the Magistrate. An aggrieved person or a Protection Officer on behalf of the aggrieved person may present an application to the Magistrate seeking protection orders, residence orders, monetary reliefs, custody orders, or compensation orders under this Act.",
+      "lastVerified": "2026-05-10"
+    },
+    {
+      "sourceId": "SRC-014",
+      "title": "Consumer Protection Act, 2019",
+      "authority": "District Consumer Disputes Redressal Commission",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "legal_grievance",
+      "subcategory": "consumer_dispute",
+      "tags": ["consumer", "merchant", "product", "refund", "replace", "bought", "defective", "seller", "shop", "cheated", "services"],
+      "officialUrl": "https://ncdrc.nic.in",
+      "content": "Section 34: Jurisdiction of District Commission. A consumer can file a complaint with the District Commission regarding defective goods, unfair contracts, or deficiency of services where the value of goods or services does not exceed fifty lakh rupees. Complaints can be filed online via the e-Daakhil portal.",
+      "lastVerified": "2026-06-01"
+    },
+    {
+      "sourceId": "SRC-015",
+      "title": "Information Technology Act, 2000",
+      "authority": "Cyber Crime Investigation Division",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "legal_grievance",
+      "subcategory": "cyber_crime",
+      "tags": ["cyber", "hacked", "phishing", "scam", "online fraud", "bank fraud", "otp", "stolen money"],
+      "officialUrl": "https://cybercrime.gov.in",
+      "content": "Section 66D: Punishment for cheating by personation by using computer resource. Whoever, by means of any communication device or computer resource cheats by personation, shall be punished with imprisonment up to three years. Victims can report online financial scams immediately on the National Cyber Crime Portal.",
+      "lastVerified": "2026-04-18"
+    },
+    {
+      "sourceId": "SRC-016",
+      "title": "Bharatiya Nagarik Suraksha Sanhita (BNSS) Code",
+      "authority": "Local Police Station / SHO Office",
+      "jurisdiction": {
+        "country": "India",
+        "state": "National",
+        "city": "National",
+        "localityOrWard": ""
+      },
+      "category": "legal_grievance",
+      "subcategory": "general_crime",
+      "tags": ["theft", "stolen", "robbery", "burgled", "police", "fir", "stole", "assault"],
+      "officialUrl": "https://mha.gov.in",
+      "content": "Section 173: Information in cognizable cases (First Information Report). Every information relating to the commission of a cognizable offence, if given orally or in writing to an officer in charge of a police station, must be registered as an FIR. A signed copy of the FIR must be provided to the informant free of cost immediately.",
+      "lastVerified": "2026-06-15"
     }
   ]
 }
