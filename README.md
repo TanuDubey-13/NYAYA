@@ -422,37 +422,7 @@ The case can then be tracked through its lifecycle.
 
 ---
 
-# 🖥️ Product Screenshots
 
-Add screenshots of the actual application here.
-
-### Problem Input
-
-![NYAYA Problem Input](docs/screenshots/problem-input.png)
-
-### AI Triage
-
-![NYAYA AI Triage](docs/screenshots/triage.png)
-
-### Evidence Verification
-
-![NYAYA Verification](docs/screenshots/verification.png)
-
-### Action Plan
-
-![NYAYA Action Plan](docs/screenshots/action-plan.png)
-
-### Grievance Editor
-
-![NYAYA Grievance Editor](docs/screenshots/grievance.png)
-
-### Case Timeline
-
-![NYAYA Timeline](docs/screenshots/timeline.png)
-
-> Replace the paths above with the actual screenshot locations in the repository.
-
----
 
 # 🛠️ Technology Stack
 
