@@ -9,6 +9,7 @@ import { LanguageToggle } from './components/LanguageToggle';
 import { AuthModal } from './components/AuthModal';
 import { CaseDashboard } from './components/CaseDashboard';
 import { onAuthStateChanged, logout, getIdToken, User } from './utils/firebase';
+import { translations } from './utils/translations';
 import { 
   submitIntake, 
   respondCase, 
@@ -28,6 +29,7 @@ import {
 export default function App() {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [loading, setLoading] = useState(false);
+  
   // Auth & View states
   const [user, setUser] = useState<User | null>(null);
   const [cases, setCases] = useState<CaseDocument[]>([]);
@@ -37,6 +39,9 @@ export default function App() {
   // Case Session states
   const [activeCase, setActiveCase] = useState<CaseDocument | null>(null);
   const [locality, setLocality] = useState('');
+
+  // Translation helper
+  const t = (key: keyof typeof translations['en']) => translations[lang][key] || key;
 
   // 1. Initial Guest Session and Auth State Observer
   React.useEffect(() => {
@@ -235,19 +240,19 @@ export default function App() {
                   onClick={() => { setActiveCase(null); setView('dashboard'); }}
                   className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition-colors"
                 >
-                  Dashboard
+                  {t('dashboard')}
                 </button>
                 <button
                   onClick={() => { setActiveCase(null); setView('workspace'); }}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-semibold"
                 >
-                  New Case
+                  {t('newCase')}
                 </button>
                 <button
                   onClick={async () => { await logout(); handleReset(); }}
                   className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-rose-400 rounded-lg border border-slate-800 transition-colors"
                 >
-                  Logout
+                  {t('logout')}
                 </button>
               </div>
             ) : (
@@ -257,14 +262,14 @@ export default function App() {
                     onClick={() => { setActiveCase(null); setView('dashboard'); }}
                     className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition-colors"
                   >
-                    My Guest Cases ({cases.length})
+                    {t('myGuestCases')} ({cases.length})
                   </button>
                 )}
                 <button
                   onClick={() => setAuthModalOpen(true)}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-semibold"
                 >
-                  Sign In
+                  {t('signIn')}
                 </button>
               </div>
             )}
@@ -280,15 +285,14 @@ export default function App() {
           <div className="max-w-4xl mx-auto text-center space-y-8 animate-fadeIn">
             <div className="space-y-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-semibold uppercase tracking-wider">
-                ⚖️ AI Civic & Legal Action Navigator
+                ⚖️ {t('tagline')}
               </span>
               <h1 className="text-4xl md:text-6xl font-display font-extrabold tracking-tight text-white leading-tight">
-                Turn your civic problem into a <br />
-                <span className="text-gradient">verified action plan.</span>
+                {t('heroTitle')} <br />
+                <span className="text-gradient">{t('heroHighlight')}</span>
               </h1>
               <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-                Describe your issue in plain language. NYAYA identifies relevant regulations, 
-                retrieves citations from official portals, outlines action plans, and structures drafts.
+                {t('heroDesc')}
               </p>
             </div>
 
@@ -297,25 +301,25 @@ export default function App() {
                 onClick={() => setView('workspace')}
                 className="glow-btn flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-lg shadow-indigo-600/20 transition-all w-full sm:w-auto justify-center"
               >
-                Try NYAYA
+                {t('tryNyaya')}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
             <div className="border-t border-slate-900 pt-8 max-w-lg mx-auto">
-              <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">Core Principles</p>
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">{t('corePrinciples')}</p>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <span className="text-xs font-semibold text-slate-300 block">Evidence-Backed</span>
-                  <span className="text-[10px] text-slate-500 mt-1 block">Sources from official codes</span>
+                  <span className="text-xs font-semibold text-slate-300 block">{t('evidenceBacked')}</span>
+                  <span className="text-[10px] text-slate-500 mt-1 block">{t('evidenceDesc')}</span>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-300 block">Personalized Tasks</span>
-                  <span className="text-[10px] text-slate-500 mt-1 block">Contextual next-steps</span>
+                  <span className="text-xs font-semibold text-slate-300 block">{t('personalizedTasks')}</span>
+                  <span className="text-[10px] text-slate-500 mt-1 block">{t('tasksDesc')}</span>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-300 block">Document Drafting</span>
-                  <span className="text-[10px] text-slate-500 mt-1 block">Filing applications directly</span>
+                  <span className="text-xs font-semibold text-slate-300 block">{t('docDrafting')}</span>
+                  <span className="text-[10px] text-slate-500 mt-1 block">{t('draftingDesc')}</span>
                 </div>
               </div>
             </div>
@@ -339,7 +343,7 @@ export default function App() {
 
             {/* Step 1: Intake Form */}
             {!activeCase && (
-              <IntakePanel onSubmit={handleIntakeSubmit} isLoading={loading} />
+              <IntakePanel onSubmit={handleIntakeSubmit} isLoading={loading} lang={lang} />
             )}
 
             {/* Step 2: Clarification prompt */}
@@ -350,14 +354,14 @@ export default function App() {
                     <Info className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-slate-100">Jurisdiction Clarification</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Please confirm your locality parameters to query local rules.</p>
+                    <h3 className="text-base font-semibold text-slate-100">{t('jurisdictionClarification')}</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">{t('confirmLocality')}</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleClarifySubmit} className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400">Ward Number or Locality Name</label>
+                    <label className="text-xs font-semibold text-slate-400">{t('wardOrLocality')}</label>
                     <input
                       type="text"
                       value={locality}
@@ -372,7 +376,7 @@ export default function App() {
                     disabled={loading || !locality.trim()}
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors"
                   >
-                    Submit Details
+                    {t('submitDetails')}
                   </button>
                 </form>
               </div>
@@ -382,8 +386,8 @@ export default function App() {
             {activeCase && activeCase.status !== 'TRIAGED' && (
               <div className="space-y-8 animate-fadeIn">
                 <div className="border-b border-slate-900 pb-4">
-                  <h2 className="text-2xl font-display font-bold text-white">NYAYA Navigator Panel</h2>
-                  <p className="text-xs text-slate-400 mt-1">Review verified civic parameters and custom actions generated for you.</p>
+                  <h2 className="text-2xl font-display font-bold text-white">{t('navigatorPanel')}</h2>
+                  <p className="text-xs text-slate-400 mt-1">{t('navigatorDesc')}</p>
                 </div>
 
                 <RightsPanel 
@@ -419,7 +423,7 @@ export default function App() {
                 {/* Submissions & Auth Mapping CTA card */}
                 <div className="w-full max-w-3xl mx-auto glass-panel p-8 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-200">Prepared by NYAYA • Action Plan Ready</h3>
+                    <h3 className="text-sm font-semibold text-slate-200">{t('actionPlanReady')}</h3>
                     <p className="text-xs text-slate-500 mt-1">
                       {activeCase.status === 'READY_TO_SUBMIT' 
                         ? 'Draft modified. You can file this draft on the official grievance portal.' 
@@ -435,7 +439,7 @@ export default function App() {
                         onClick={handleSubmitStatus}
                         className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/10"
                       >
-                        I Filed This Complaint
+                        {t('filedComplaint')}
                       </button>
                     )}
                     {activeCase.userId === null && (
@@ -444,7 +448,7 @@ export default function App() {
                         className="flex items-center gap-1.5 px-5 py-2.5 bg-slate-850 hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 text-xs font-semibold rounded-xl border border-slate-800 transition-all"
                       >
                         <UserPlus className="w-4 h-4" />
-                        Save to Account
+                        {t('saveToAccount')}
                       </button>
                     )}
                   </div>
@@ -458,8 +462,7 @@ export default function App() {
       {/* Footer bar */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 bg-slate-950">
         <p className="max-w-2xl mx-auto px-6">
-          NYAYA provides informational and procedural guidance based on available sources. 
-          It does not replace a qualified legal professional or an official government decision.
+          {t('footerNotice')}
         </p>
       </footer>
 
